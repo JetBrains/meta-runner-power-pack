@@ -14,4 +14,4 @@ If after placing the Meta-runner on disk you see the following error in TeamCity
 and cannot be overriden from path '<another path>\MRPP_PublishTeamCityArtifacts.xml'``
 
 it means Meta-runner with the same ID is already defined in another project. To fix it you can either remove old Meta-runner, or change ID of the new one.
-ID of the Meta-runner is name of the file, so you can simply rename file to some other name. It makes sense to preserve prefix **MRPP_** so that you could understand where this meta-runner came from.
+ID of the Meta-runner is the name of the file, so you can simply rename file to some other name. It makes sense to preserve prefix **MRPP_** so that you could understand where this meta-runner came from.
