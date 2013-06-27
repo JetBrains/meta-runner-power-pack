@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<meta-runner name="Upload to FTP">
+  <description>Uploads files to FTP server</description>
+  <settings>
+    <parameters>
+      <param name="system.ftp.server" value="" spec="text description='FTP server address' display='normal' label='FTP server:' validationMode='not_empty'" />
+      <param name="system.ftp.port" value="21" spec="text display='normal' label='FTP server port:' regexp='|[0-9|]+' validationMessage='Invalid port number' validationMode='regex'" />
+      <param name="system.ftp.user" value="" spec="text display='normal' label='Username:' validationMode='any'" />
+      <param name="system.ftp.password" value="zxx775d03cbe80d301b" spec="password display='normal' label='Password:'" />
+      <param name="system.src.dir" value="" spec="text description='Directory with files for upload (if empty - current directory will be used)' display='normal' label='Source directory:' validationMode='any'" />
+      <param name="system.include.pattern" value="**/*" spec="text description='Ant-like include pattern for files in source directory' display='normal' label='Include pattern:' validationMode='not_empty'" />
+      <param name="system.exclude.pattern" value="" spec="text description='Ant-like exclude pattern for files in source directory' display='normal' label='Exclude pattern:' validationMode='any'" />
+      <param name="system.dest.dir" value="" spec="text description='Directory on FTP server where to put files (if empty - default directory for given username will be used)' display='normal' label='Destination directory:' validationMode='any'" />
+    </parameters>
+    <build-runners>
+      <runner name="" type="Ant">
+        <parameters>
+          <param name="build-file"><![CDATA[<project name="FTP upload">
+
+<property name="temp" value="${teamcity.build.tempDir}/ftpTemp"/>
+<condition property="dest.dir.set">
+  <matches pattern=".+" string="${dest.dir}"/>
+</condition>
+
+<target name="prepare-ftp">
+<mkdir dir="${temp}"/>
+
+<get src="http://repo2.maven.org/maven2/commons-net/commons-net/2.0/commons-net-2.0.jar" 
+dest="${temp}/commons-net-2.0.jar" verbose="true"/>
+
+<get src="http://bit.ly/bdHM3A" dest="${temp}/ant-classloadertask-1.0-RC2.zip" verbose="true"/>
+<unzip src="${temp}/ant-classloadertask-1.0-RC2.zip" dest="${temp}">
+<fileset dir="ant-classloadertask-1.0-RC2" file="ant-classloadertask.jar"/>
+</unzip>
+
+<!--suppress AntResolveInspection -->
+<taskdef resource="net/jtools/classloadertask/antlib.xml" classpath="${temp}/ant-classloadertask-1.0-RC2/ant-classloadertask.jar"/>
+<classloader loader="system" classpath="${temp}/commons-net-2.0.jar"/>
+<taskdef name="ftp" classname="org.apache.tools.ant.taskdefs.optional.net.FTP"/>
+</target>
+
+<target name="put-files" depends="prepare-ftp, create-remote-dir">
+
+<ftp server="${ftp.server}" 
+  port="${ftp.port}"
+  userid="${ftp.user}"
+  password="${ftp.password}"
+  remotedir="${dest.dir}"
+  verbose="true">
+
+<fileset dir="${src.dir}">
+<include name="${include.pattern}"/>
+<exclude name="${exclude.pattern}"/>
+</fileset>
+</ftp>
+
+</target>
+
+<target name="create-remote-dir" if="dest.dir.set">
+<ftp action="mkdir"
+     server="${ftp.server}"
+     port="${ftp.port}"
+     userid="${ftp.user}"
+     password="${ftp.password}"
+     remotedir="${dest.dir}">
+</ftp>
+</target>
+
+
+</project>]]></param>
+          <param name="build-file-path" value="build.xml" />
+          <param name="target" value="put-files" />
+          <param name="teamcity.coverage.emma.include.source" value="true" />
+          <param name="teamcity.coverage.emma.instr.parameters" value="-ix -*Test*" />
+          <param name="teamcity.coverage.idea.includePatterns" value="*" />
+          <param name="teamcity.step.mode" value="default" />
+          <param name="use-custom-build-file" value="true" />
+        </parameters>
+      </runner>
+    </build-runners>
+    <requirements />
+  </settings>
+</meta-runner>
+
