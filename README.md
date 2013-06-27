@@ -6,7 +6,7 @@ A collection of [Meta-runners](http://confluence.jetbrains.com/display/TCD8/Work
 Installation Instructions
 =========================
 
-Each file with name like **MRPP_<some text>.xml** contains a definition of a single Meta-runner.
+Each file with name **MRPP_\<some text\>.xml** contains a definition of a single [Meta-runner](http://confluence.jetbrains.com/display/TCD8/Working+with+Meta-Runner).
 
 To install Meta-runner, take Meta-runner definition file and put it into [\<TeamCity Data Directory\>](http://confluence.jetbrains.com/display/TCD8/TeamCity+Data+Directory)/projects/\<Project ID\>/pluginData/metaRunners/ directory.
 
