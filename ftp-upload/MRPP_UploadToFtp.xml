@@ -6,7 +6,7 @@
       <param name="system.ftp.server" value="" spec="text description='FTP server address' display='normal' label='FTP server:' validationMode='not_empty'" />
       <param name="system.ftp.port" value="21" spec="text display='normal' label='FTP server port:' regexp='|[0-9|]+' validationMessage='Invalid port number' validationMode='regex'" />
       <param name="system.ftp.user" value="" spec="text display='normal' label='Username:' validationMode='any'" />
-      <param name="system.ftp.password" value="zxx775d03cbe80d301b" spec="password display='normal' label='Password:'" />
+      <param name="system.ftp.password" value="" spec="password display='normal' label='Password:'" />
       <param name="system.src.dir" value="" spec="text description='Directory with files for upload (if empty - current directory will be used)' display='normal' label='Source directory:' validationMode='any'" />
       <param name="system.include.pattern" value="**/*" spec="text description='Ant-like include pattern for files in source directory' display='normal' label='Include pattern:' validationMode='not_empty'" />
       <param name="system.exclude.pattern" value="" spec="text description='Ant-like exclude pattern for files in source directory' display='normal' label='Exclude pattern:' validationMode='any'" />
