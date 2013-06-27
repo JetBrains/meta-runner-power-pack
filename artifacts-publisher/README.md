@@ -7,7 +7,7 @@ To install this Meta-runner, copy file **MRPP_PublishTeamCityArtifacts.xml** to 
 Once you place a file on disk, TeamCity server will detect it and load this Meta-runner. No server restart is required.
 
 Meta-runner placed into some project will be available to build configurations from this project and all subprojects. 
-If you want Meta-runner to be available to all of the projects, it should be placed in Root project.
+If you want Meta-runner to be available to all of the projects, it should be placed in **Root** project.
 
 If after placing the Meta-runner on disk you see the following error in TeamCity web interface:
 ``Meta-Runner with id 'MRPP_PublishTeamCityArtifacts' was registered from path '<some path>\MRPP_PublishTeamCityArtifacts.xml' 
