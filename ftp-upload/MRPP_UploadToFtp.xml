@@ -1,25 +1,32 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<meta-runner name="Upload to FTP">
-  <description>Uploads files to FTP server</description>
+<!DOCTYPE build-type SYSTEM "../../../project-config.dtd">
+
+<build-type>
+  <name>Upload to FTP</name>
+  <description />
   <settings>
     <parameters>
-      <param name="system.ftp.server" value="" spec="text description='FTP server address' display='normal' label='FTP server:' validationMode='not_empty'" />
-      <param name="system.ftp.port" value="21" spec="text display='normal' label='FTP server port:' regexp='|[0-9|]+' validationMessage='Invalid port number' validationMode='regex'" />
-      <param name="system.ftp.user" value="" spec="text display='normal' label='Username:' validationMode='any'" />
-      <param name="system.ftp.password" value="" spec="password display='normal' label='Password:'" />
-      <param name="system.src.dir" value="" spec="text description='Directory with files for upload (if empty - current directory will be used)' display='normal' label='Source directory:' validationMode='any'" />
-      <param name="system.include.pattern" value="**/*" spec="text description='Ant-like include pattern for files in source directory' display='normal' label='Include pattern:' validationMode='not_empty'" />
-      <param name="system.exclude.pattern" value="" spec="text description='Ant-like exclude pattern for files in source directory' display='normal' label='Exclude pattern:' validationMode='any'" />
+      <param name="system.clean.dest.dir" value="false" spec="checkbox checkedValue='true' description='Enable if destination directory must be cleaned before uploading files' display='normal' label='Clean destination directory:' uncheckedValue='false'" />
       <param name="system.dest.dir" value="" spec="text description='Directory on FTP server where to put files (if empty - default directory for given username will be used)' display='normal' label='Destination directory:' validationMode='any'" />
+      <param name="system.exclude.pattern" value="" spec="text description='Ant-like exclude pattern for files in source directory' display='normal' label='Exclude pattern:' validationMode='any'" />
+      <param name="system.ftp.password" value="zxx775d03cbe80d301b" spec="password display='normal' label='Password:'" />
+      <param name="system.ftp.port" value="21" spec="text display='normal' label='FTP server port:' regexp='|[0-9|]+' validationMessage='Invalid port number' validationMode='regex'" />
+      <param name="system.ftp.server" value="" spec="text description='FTP server address' display='normal' label='FTP host:' validationMode='not_empty'" />
+      <param name="system.ftp.user" value="" spec="text display='normal' label='Username:' validationMode='any'" />
+      <param name="system.include.pattern" value="**/*" spec="text description='Ant-like include pattern for files in source directory' display='normal' label='Include pattern:' validationMode='not_empty'" />
+      <param name="system.src.dir" value="" spec="text description='Directory with files for upload (if empty - current directory will be used)' display='normal' label='Source directory:' validationMode='any'" />
     </parameters>
     <build-runners>
-      <runner name="" type="Ant">
+      <runner id="RUNNER_24" name="" type="Ant">
         <parameters>
           <param name="build-file"><![CDATA[<project name="FTP upload">
 
 <property name="temp" value="${teamcity.build.tempDir}/ftpTemp"/>
 <condition property="dest.dir.set">
   <matches pattern=".+" string="${dest.dir}"/>
+</condition>
+<condition property="clean.dest.dir.set">
+  <matches pattern="true" string="${clean.dest.dir}"/>
 </condition>
 
 <target name="prepare-ftp">
@@ -39,7 +46,7 @@ dest="${temp}/commons-net-2.0.jar" verbose="true"/>
 <taskdef name="ftp" classname="org.apache.tools.ant.taskdefs.optional.net.FTP"/>
 </target>
 
-<target name="put-files" depends="prepare-ftp, create-remote-dir">
+<target name="put-files" depends="prepare-ftp, clean-remote-dir, create-remote-dir">
 
 <ftp server="${ftp.server}" 
   port="${ftp.port}"
@@ -66,6 +73,21 @@ dest="${temp}/commons-net-2.0.jar" verbose="true"/>
 </ftp>
 </target>
 
+<target name="clean-remote-dir" if="clean.dest.dir.set">
+<ftp action="del"
+     server="${ftp.server}"
+     port="${ftp.port}"
+     userid="${ftp.user}"
+     password="${ftp.password}"
+     remotedir="${dest.dir}">
+<fileset>
+<include name="**/*"/>
+</fileset>
+</ftp>
+
+
+</target>
+
 
 </project>]]></param>
           <param name="build-file-path" value="build.xml" />
@@ -78,7 +100,10 @@ dest="${temp}/commons-net-2.0.jar" verbose="true"/>
         </parameters>
       </runner>
     </build-runners>
+    <vcs-settings checkout-mode="ON_SERVER" labeling-type="NONE" labeling-pattern="build-%system.build.number%" />
     <requirements />
+    <build-triggers />
+    <cleanup />
   </settings>
-</meta-runner>
+</build-type>
 
