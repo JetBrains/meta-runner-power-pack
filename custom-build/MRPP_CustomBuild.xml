@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<meta-runner name="Custom Build">
+  <description>Triggers a build with custom parameters</description>
+  <settings>
+    <parameters>
+      <param name="system.buildConf.id" value="" spec="text description='Identifier of a build configuration where to trigger a build' display='normal' label='Build configuration ID:' validationMode='not_empty'" />
+      <param name="system.custom.params" value="" spec="text description='New-line delimited custom build parameters in the form: &lt;name&gt;=&lt;value&gt;' display='normal' label='Custom parameters:' regexp='(|[^=\s|]+=|[^=\s|]+\s*)*' validationMessage='Expected new-line delimited &lt;name&gt;=&lt;value&gt; pairs' validationMode='regex' allowEmpty='true'" />
+      <param name="system.username" value="" spec="text description='Username of a user who triggers build' display='normal' label='Username:' validationMode='not_empty'" />
+      <param name="system.password" value="" spec="password description='Password of a user who triggers build' display='normal' label='Password:'" />
+    </parameters>
+    <build-runners>
+      <runner name="" type="Ant">
+        <parameters>
+          <param name="build-file"><![CDATA[<project name="Custom build">
+<property name="taskDir" location="${teamcity.build.tempDir}/http-task"/>
+<property name="httpTaskZip" value="ml-ant-http-1.1.3.zip"/>
+
+<target name="prepare-http-task">
+<mkdir dir="${taskDir}"/>
+<get src="http://missing-link.googlecode.com/files/${httpTaskZip}"
+     dest="${taskDir}"/>
+
+<unzip src="${taskDir}/${httpTaskZip}"
+       dest="${taskDir}"/>
+
+<taskdef name="http" classname="org.missinglink.ant.task.http.HttpClientTask">
+  <classpath>
+    <fileset dir="${taskDir}">
+      <include name="**/*.jar"/>
+    </fileset>
+  </classpath>
+</taskdef>
+</target>
+
+<property name="reqParams.file" location="${teamcity.build.tempDir}/rawParams.txt"/>
+
+<target name="prepare-params">
+<echo file="${reqParams.file}" message="${custom.params}"/>
+
+<replaceregexp file="${reqParams.file}"
+               match="([^=]+)=([^=]+)"
+               replace="name=\1&amp;value=\2"
+               byline="true"
+/>
+<replaceregexp file="${reqParams.file}"
+               match="\r\n"
+               replace="&amp;"
+               flags="gm"
+/>
+<echo file="${reqParams.file}" append="true">&amp;add2Queue=${buildConf.id}</echo>
+</target>
+
+<target name="add2Queue" depends="prepare-http-task, prepare-params">
+<http url="%teamcity.serverUrl%/httpAuth/action.html" 
+      method="POST" 
+      expected="200"
+      printrequest="true">
+<credentials username="${username}" password="${password}"/>
+<entity file="${reqParams.file}" binary="false"/>
+</http>
+</target>
+
+</project>]]></param>
+          <param name="build-file-path" value="build.xml" />
+          <param name="target" value="add2Queue" />
+          <param name="teamcity.coverage.emma.include.source" value="true" />
+          <param name="teamcity.coverage.emma.instr.parameters" value="-ix -*Test*" />
+          <param name="teamcity.coverage.idea.includePatterns" value="*" />
+          <param name="teamcity.step.mode" value="default" />
+          <param name="use-custom-build-file" value="true" />
+        </parameters>
+      </runner>
+    </build-runners>
+    <requirements />
+  </settings>
+</meta-runner>
+
