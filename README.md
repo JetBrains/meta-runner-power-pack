@@ -6,10 +6,11 @@ A collection of [Meta-runners](http://confluence.jetbrains.com/display/TCD8/Work
 Available Meta-Runners
 ======================
 
-* Publish TeamCity artifacts
-* Upload to FTP
-* Trigger Custom Build
-* Add Tags to Build
+* Publish TeamCity artifacts (publishes artifacts to TeamCity while the build is running)
+* Upload to FTP (uploads files to FTP)
+* Download File (downloads file by HTTP or FTP URL)
+* Trigger Custom Build (triggers a build in TeamCity optionally with custom parameters)
+* Add Tags to Build (adds tags to currently running build in TeamCity)
 
 
 Installation Instructions
