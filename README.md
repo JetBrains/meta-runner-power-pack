@@ -9,6 +9,7 @@ Available Meta-Runners
 * Publish TeamCity artifacts
 * Upload to FTP
 * Trigger Custom Build
+* Add Tags to Build
 
 
 Installation Instructions
