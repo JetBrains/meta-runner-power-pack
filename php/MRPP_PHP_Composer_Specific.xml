@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<meta-runner name="Install Composer package">
+  <description>Install a specific Composer package</description>
+  <settings>
+    <parameters>
+      <param name="system.dest.dir" value="" spec="text description='Directory where composer.json is located (if empty - current working directory will be used)' display='normal' label='Composer.json directory:' validationMode='any'" />
+      <param name="system.composer.dependency" value="" spec="text description='Composer dependency to require/update, e.g. phpunit/phpunit' display='normal' label='Composer dependency:' validationMode='not_empty'" />
+      <param name="system.composer.dependency.version" value="" spec="text description='Composer dependency version constraint, e.g. 3.7.*' display='normal' label='Composer dependency version constraint:' validationMode='not_empty'" />
+      <param name="system.composer.params" value="" spec="text description='Optional composer.phar parameters' display='normal' label='Composer parameters:' validationMode='any'" />
+    </parameters>
+    <build-runners>
+      <runner id="RUNNER_14" name="" type="Ant">
+        <parameters>
+          <param name="build-file"><![CDATA[<project name="Install Composer package">
+
+<condition property="composer.dest.dir" value="${teamcity.build.workingDir}">
+   <not>  
+      <matches pattern=".+" string="${dest.dir}"/>
+   </not>
+</condition>
+<property name="composer.dest.dir" value="${dest.dir}" />
+
+<target name="runComposer" depends="getComposer">
+  <exec executable="php" failonerror="true">
+    <arg line="-f &quot;${composer.dest.dir}/composer.phar&quot; -d ${composer.dest.dir} ${composer.params} require &quot;${composer.dependency}:${composer.dependency.version}&quot;"/>
+  </exec>
+</target>
+
+<target name="getComposer" depends="create-composer-dest-dir">
+  <get src="http://getcomposer.org/composer.phar" dest="${composer.dest.dir}" verbose="on" skipexisting="false"/>
+</target>
+
+<target name="create-composer-dest-dir">
+    <mkdir dir="${composer.dest.dir}"/>
+</target>
+
+</project>]]></param>
+          <param name="build-file-path" value="build.xml" />
+          <param name="target" value="runComposer" />
+          <param name="teamcity.coverage.emma.include.source" value="true" />
+          <param name="teamcity.coverage.emma.instr.parameters" value="-ix -*Test*" />
+          <param name="teamcity.coverage.idea.includePatterns" value="*" />
+          <param name="teamcity.step.mode" value="default" />
+          <param name="use-custom-build-file" value="true" />
+        </parameters>
+      </runner>
+    </build-runners>
+    <requirements />
+  </settings>
+</meta-runner>
+
