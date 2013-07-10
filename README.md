@@ -11,6 +11,12 @@ Available Meta-Runners
 * Download File (downloads file by HTTP or FTP URL)
 * Trigger Custom Build (triggers a build in TeamCity optionally with custom parameters)
 * Add Tags to Build (adds tags to currently running build in TeamCity)
+* PHP-related meta runners
+	* Run arbitrary PHP code
+	* Install a specific Composer dependency
+	* Install/update packages from composer.json
+	* Run Phing build script
+	* Run PHPUnit tests (with code coverage reporting)
 
 
 Installation Instructions
@@ -26,6 +32,11 @@ If Meta-runner is loaded succcessfully you should see its name in the list of bu
 
 Meta-runner placed into some project will be available to build configurations from this project and all subprojects. 
 If you want Meta-runner to be available to all of the projects, it should be placed in **Root** project.
+
+Agent requirements
+=========================
+
+For the PHP meta runners, make sure that a PHP runtime is available on the build agents and that it is enlisted in the `PATH` variable.
 
 Troubleshooting
 ===============

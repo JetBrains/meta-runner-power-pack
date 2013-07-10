@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<meta-runner name="PHP">
+  <description>PHP</description>
+  <settings>
+    <parameters>
+      <param name="system.php.script" value="" spec="text description='PHP script to run' display='normal' label='PHP script:' validationMode='not_empty'" />
+      <param name="system.php.params" value="" spec="text description='Optional PHP parameters' display='normal' label='PHP parameters:' validationMode='any'" />
+    </parameters>
+    <build-runners>
+      <runner id="RUNNER_14" name="" type="Ant">
+        <parameters>
+          <param name="build-file"><![CDATA[<project name="PHP">
+		  
+<target name="runPhp">
+  <exec executable="php" dir="${teamcity.build.workingDir}" failonerror="true">
+    <arg line="-f &quot;${php.script}&quot; ${php.params}"/>
+  </exec>  
+</target>
+
+</project>]]></param>
+          <param name="build-file-path" value="build.xml" />
+          <param name="target" value="runPhp" />
+          <param name="teamcity.coverage.emma.include.source" value="true" />
+          <param name="teamcity.coverage.emma.instr.parameters" value="-ix -*Test*" />
+          <param name="teamcity.coverage.idea.includePatterns" value="*" />
+          <param name="teamcity.step.mode" value="default" />
+          <param name="use-custom-build-file" value="true" />
+        </parameters>
+      </runner>
+    </build-runners>
+    <requirements />
+  </settings>
+</meta-runner>
+
