@@ -33,11 +33,6 @@ If Meta-runner is loaded succcessfully you should see its name in the list of bu
 Meta-runner placed into some project will be available to build configurations from this project and all subprojects. 
 If you want Meta-runner to be available to all of the projects, it should be placed in **Root** project.
 
-Agent requirements
-=========================
-
-For the PHP meta runners, make sure that a PHP runtime is available on the build agents and that it is enlisted in the `PATH` variable.
-
 Troubleshooting
 ===============
 
