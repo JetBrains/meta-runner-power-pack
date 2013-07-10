@@ -21,7 +21,7 @@
   
 <target name="runPhp">
   <exec executable="php" dir="${php.workingDir}" failonerror="true">
-    <arg line="-f &quot;${php.script}&quot; ${php.params}"/>
+    <arg line="-f &quot;${php.script}&quot; -d display_errors=On ${php.params}"/>
   </exec>  
 </target>
 
@@ -39,4 +39,3 @@
     <requirements />
   </settings>
 </meta-runner>
-

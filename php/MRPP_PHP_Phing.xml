@@ -6,6 +6,7 @@
       <param name="system.phing.runtime" value="" spec="text description='Phing runtime (if empty - latest Phing.phar will be downloaded)' display='normal' label='Phing runtime:' validationMode='any'" />
       <param name="system.phing.configuration" value="" spec="text description='Phing configuration file' display='normal' label='Phing configuration file:' validationMode='not_empty'" />
       <param name="system.php.workingDir.dir" value="" spec="text description='Working directory (if empty - current working directory will be used)' display='normal' label='Working directory:' validationMode='any'" />
+      <param name="system.phing.targets" value="" spec="text description='Optional Phing targets, separated with spaces' display='normal' label='Targets:' validationMode='any'" />
       <param name="system.phing.params" value="" spec="text description='Optional Phing parameters' display='normal' label='Phing parameters:' validationMode='any'" />
     </parameters>
     <build-runners>
@@ -35,13 +36,13 @@
 
 <target name="runPhingPhar" depends="getPhing" unless="phing.runtime.set">
   <exec executable="php" dir="${php.workingDir}" failonerror="true">
-    <arg line="-f &quot;${phing.runtime.exec}&quot; -- -buildfile &quot;${phing.configuration}&quot; ${phing.params}"/>
+    <arg line="-f &quot;${phing.runtime.exec}&quot; -d phar.readonly=Off -d display_errors=On -- -buildfile &quot;${phing.configuration}&quot; ${phing.params} ${phing.targets}"/>
   </exec>  
 </target>
 
 <target name="runPhingRuntime" depends="getPhing" if="phing.runtime.set">
   <exec executable="${phing.runtime}" dir="${php.workingDir}" failonerror="true">
-    <arg line="-buildfile &quot;${phing.configuration}&quot; ${phing.params}"/>
+    <arg line="-buildfile &quot;${phing.configuration}&quot; ${phing.params} ${phing.targets}"/>
   </exec>
 </target>
 
@@ -63,4 +64,3 @@
     <requirements />
   </settings>
 </meta-runner>
-
