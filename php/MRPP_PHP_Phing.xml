@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<meta-runner name="Phing">
+  <description>Phing</description>
+  <settings>
+    <parameters>
+      <param name="system.phing.runtime" value="" spec="text description='Phing runtime (if empty - latest Phing.phar will be downloaded)' display='normal' label='Phing runtime:' validationMode='any'" />
+      <param name="system.phing.configuration" value="" spec="text description='Phing configuration file' display='normal' label='Phing configuration file:' validationMode='not_empty'" />
+      <param name="system.php.workingDir.dir" value="" spec="text description='Working directory (if empty - current working directory will be used)' display='normal' label='Working directory:' validationMode='any'" />
+      <param name="system.phing.targets" value="" spec="text description='Optional Phing targets, separated with spaces' display='normal' label='Targets:' validationMode='any'" />
+      <param name="system.phing.params" value="" spec="text description='Optional Phing parameters' display='normal' label='Phing parameters:' validationMode='any'" />
+    </parameters>
+    <build-runners>
+      <runner id="RUNNER_14" name="" type="Ant">
+        <parameters>
+          <param name="build-file"><![CDATA[<project name="Phing">
+
+<condition property="php.workingDir" value="${teamcity.build.workingDir}">
+   <not>  
+      <matches pattern=".+" string="${php.workingDir.dir}"/>
+   </not>
+</condition>
+<property name="php.workingDir" value="${php.workingDir.dir}" />
+
+<condition property="phing.runtime.set">
+  <matches pattern=".+" string="${phing.runtime}"/>
+</condition>
+<condition property="phing.runtime.exec" value="${teamcity.build.tempDir}/phing-latest.phar">
+   <not>
+      <matches pattern=".+" string="${phing.runtime}"/>
+   </not>
+</condition>
+<property name="phing.runtime.exec" value="${phing.runtime}"/>
+
+<target name="runPhing" depends="getPhing,runPhingPhar,runPhingRuntime">
+</target>
+
+<target name="runPhingPhar" depends="getPhing" unless="phing.runtime.set">
+  <exec executable="php" dir="${php.workingDir}" failonerror="true">
+    <arg line="-f &quot;${phing.runtime.exec}&quot; -d phar.readonly=Off -d display_errors=On -- -buildfile &quot;${phing.configuration}&quot; ${phing.params} ${phing.targets}"/>
+  </exec>  
+</target>
+
+<target name="runPhingRuntime" depends="getPhing" if="phing.runtime.set">
+  <exec executable="${phing.runtime}" dir="${php.workingDir}" failonerror="true">
+    <arg line="-buildfile &quot;${phing.configuration}&quot; ${phing.params} ${phing.targets}"/>
+  </exec>
+</target>
+
+<target name="getPhing" unless="phing.runtime.set">
+  <get src="http://www.phing.info/get/phing-latest.phar" dest="${teamcity.build.tempDir}" verbose="on" skipexisting="false"/>
+</target>
+
+</project>]]></param>
+          <param name="build-file-path" value="build.xml" />
+          <param name="target" value="runPhing" />
+          <param name="teamcity.coverage.emma.include.source" value="true" />
+          <param name="teamcity.coverage.emma.instr.parameters" value="-ix -*Test*" />
+          <param name="teamcity.coverage.idea.includePatterns" value="*" />
+          <param name="teamcity.step.mode" value="default" />
+          <param name="use-custom-build-file" value="true" />
+        </parameters>
+      </runner>
+    </build-runners>
+    <requirements />
+  </settings>
+</meta-runner>

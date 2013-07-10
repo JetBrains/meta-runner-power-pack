@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<meta-runner name="PHPUnit">
+  <description>PHPUnit</description>
+  <settings>
+    <parameters>
+      <param name="system.phpunit.runtime" value="" spec="text description='PHPUnit runtime (if empty - latest PHPUnit.phar will be downloaded)' display='normal' label='PHPUnit runtime:' validationMode='any'" />
+      <param name="system.phpunit.configuration" value="" spec="text description='PHPUnit configuration file' display='normal' label='PHPUnit configuration file:' validationMode='not_empty'" />
+      <param name="system.php.workingDir.dir" value="" spec="text description='Working directory (if empty - current working directory will be used)' display='normal' label='Working directory:' validationMode='any'" />
+      <param name="system.phpunit.params" value="" spec="text description='Optional PHPUnit parameters' display='normal' label='PHPUnit parameters:' validationMode='any'" />
+      <param name="system.phpunit.coverage.set" value="" spec="checkbox checkedValue='true' description='Enable if you want to enable PHPUnit code coverage reports' display='normal' label='Collect code coverage:' uncheckedValue='false'" />
+    </parameters>
+    <build-runners>
+      <runner id="RUNNER_14" name="" type="Ant">
+        <parameters>
+          <param name="build-file"><![CDATA[<project name="PHPUnit">
+
+<condition property="php.workingDir" value="${teamcity.build.workingDir}">
+   <not>  
+      <matches pattern=".+" string="${php.workingDir.dir}"/>
+   </not>
+</condition>
+<property name="php.workingDir" value="${php.workingDir.dir}" />
+
+<condition property="phpunit.runtime.set">
+  <matches pattern=".+" string="${phpunit.runtime}"/>
+</condition>
+<condition property="phpunit.runtime.exec" value="${teamcity.build.tempDir}/phpunit.phar">
+   <not>
+      <matches pattern=".+" string="${phpunit.runtime}"/>
+   </not>
+</condition>
+<property name="phpunit.runtime.exec" value="${phpunit.runtime}"/>
+<property name="phpunit.junit.log" value="${teamcity.build.tempDir}/phpunit-log.xml"/>
+
+<property name="phpunit.coverage.dir" value="${teamcity.build.workingDir}/tccoverage"/>
+<property name="phpunit.coverage.zip" value="${teamcity.build.workingDir}/coverage.zip"/>
+<condition property="phpunit.coverage.param" value="--coverage-html ${phpunit.coverage.dir}">
+  <istrue value="${phpunit.coverage.set}"/>
+</condition>
+
+<target name="runTests" depends="getPhpUnit,runPhpUnitPhar,runPhpUnitRuntime">
+</target>
+
+<target name="runPhpUnitPhar" depends="getPhpUnit" unless="phpunit.runtime.set">
+  <exec executable="php" dir="${php.workingDir}" failonerror="false" resultproperty="phpunit.result">
+    <arg line="-f &quot;${phpunit.runtime.exec}&quot; -d display_errors=On -- -c &quot;${phpunit.configuration}&quot; --log-junit ${phpunit.junit.log} ${phpunit.coverage.param} ${phpunit.params}"/>
+  </exec>  
+  <zip destfile="${phpunit.coverage.zip}" basedir="${phpunit.coverage.dir}" />
+  <echo>##teamcity[publishArtifacts '${phpunit.coverage.zip}']</echo>
+  <echo>##teamcity[importData type='junit' path='${phpunit.junit.log}']</echo>
+  <condition property="phpunit.result.error">
+    <not>
+      <equals arg1="0" arg2="${phpunit.result}"/>
+    </not>
+  </condition>
+  <fail message="Unit test error." if="phpunit.result.error" />
+</target>
+
+<target name="runPhpUnitRuntime" depends="getPhpUnit" if="phpunit.runtime.set">
+  <exec executable="${phpunit.runtime}" dir="${php.workingDir}" failonerror="false" resultproperty="phpunit.result">
+    <arg line="-c &quot;${phpunit.configuration}&quot; --log-junit ${phpunit.junit.log} ${phpunit.coverage.param} ${phpunit.params}"/>
+  </exec>
+  <zip destfile="${phpunit.coverage.zip}" basedir="${phpunit.coverage.dir}" />
+  <echo>##teamcity[publishArtifacts '${phpunit.coverage.zip}']</echo>
+  <echo>##teamcity[importData type='junit' path='${phpunit.junit.log}']</echo>
+  <condition property="phpunit.result.error">
+    <not>
+      <equals arg1="0" arg2="${phpunit.result}"/>
+    </not>
+  </condition>
+  <fail message="Unit test error." if="phpunit.result.error" />
+</target>
+
+<target name="getPhpUnit" unless="phpunit.runtime.set">
+  <get src="http://pear.phpunit.de/get/phpunit.phar" dest="${teamcity.build.tempDir}" verbose="on" skipexisting="false"/>
+</target>
+
+</project>]]></param>
+          <param name="build-file-path" value="build.xml" />
+          <param name="target" value="runTests" />
+          <param name="teamcity.coverage.emma.include.source" value="true" />
+          <param name="teamcity.coverage.emma.instr.parameters" value="-ix -*Test*" />
+          <param name="teamcity.coverage.idea.includePatterns" value="*" />
+          <param name="teamcity.step.mode" value="default" />
+          <param name="use-custom-build-file" value="true" />
+        </parameters>
+      </runner>
+    </build-runners>
+    <requirements />
+  </settings>
+</meta-runner>
+
