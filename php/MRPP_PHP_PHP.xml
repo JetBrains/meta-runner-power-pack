@@ -4,15 +4,23 @@
   <settings>
     <parameters>
       <param name="system.php.script" value="" spec="text description='PHP script to run' display='normal' label='PHP script:' validationMode='not_empty'" />
+      <param name="system.php.workingDir.dir" value="" spec="text description='Working directory (if empty - current working directory will be used)' display='normal' label='Working directory:' validationMode='any'" />
       <param name="system.php.params" value="" spec="text description='Optional PHP parameters' display='normal' label='PHP parameters:' validationMode='any'" />
     </parameters>
     <build-runners>
       <runner id="RUNNER_14" name="" type="Ant">
         <parameters>
           <param name="build-file"><![CDATA[<project name="PHP">
-		  
+
+<condition property="php.workingDir" value="${teamcity.build.workingDir}">
+   <not>  
+      <matches pattern=".+" string="${php.workingDir.dir}"/>
+   </not>
+</condition>
+<property name="php.workingDir" value="${php.workingDir.dir}" />
+  
 <target name="runPhp">
-  <exec executable="php" dir="${teamcity.build.workingDir}" failonerror="true">
+  <exec executable="php" dir="${php.workingDir}" failonerror="true">
     <arg line="-f &quot;${php.script}&quot; ${php.params}"/>
   </exec>  
 </target>
