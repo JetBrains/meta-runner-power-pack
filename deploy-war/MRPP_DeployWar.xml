@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<meta-runner name="Deploy War">
+  <description>Deploys WAR to servlet container</description>
+  <settings>
+    <parameters>
+      <param name="system.type" value="" spec="select data_1='tomcat7x' data_3='tomcat6x' data_5='jetty9x' data_7='jetty8x' description='Select type and version of the servlet container' display='normal' label='Container type:' label_1='Tomcat 7.x' label_3='Tomcat 6.x' label_5='Jetty 9.x' label_7='Jetty 8.x'" />
+      <param name="system.hostname" value="" spec="text description='Hostname of the servlet container' display='normal' label='Container host:' validationMode='not_empty'" />
+      <param name="system.port" value="8080" spec="text description='Servlet container port' display='normal' label='Container port:' regexp='|[0-9|]+' validationMessage='Invalid port number' validationMode='regex'" />
+      <param name="system.username" value="" spec="text description='Username to use to authenticate against servlet container' display='normal' label='Username:' validationMode='not_empty'" />
+      <param name="system.password" value="" spec="password description='Password to use to authenticate against servlet container' display='normal' label='Password:'" />
+      <param name="system.context" value="" spec="text description='Context path where to deploy web application' display='normal' label='Context:' validationMode='not_empty'" />
+      <param name="system.war.file" value="" spec="text description='Path to WAR file to be deployed in servlet container' display='normal' label='Path to WAR file:' validationMode='not_empty'" />
+    </parameters>
+    <build-runners>
+      <runner name="" type="Ant">
+        <parameters>
+          <param name="build-file"><![CDATA[<project name="Deploy War">
+<property name="taskDir" location="${teamcity.build.tempDir}/cargo"/>
+
+<target name="prepare-cargo-task">
+<delete dir="${taskDir}"/>
+<mkdir dir="${taskDir}"/>
+<get src="http://repo1.maven.org/maven2/org/codehaus/cargo/cargo-core-uberjar/1.4.2/cargo-core-uberjar-1.4.2.jar"
+     dest="${taskDir}"/>
+<get src="http://repo1.maven.org/maven2/org/codehaus/cargo/cargo-ant/1.4.2/cargo-ant-1.4.2.jar"
+     dest="${taskDir}"/>
+<get src="http://repo1.maven.org/maven2/commons-discovery/commons-discovery/0.4/commons-discovery-0.4.jar"
+     dest="${taskDir}"/>
+<get src="http://repo1.maven.org/maven2/commons-logging/commons-logging/1.1.1/commons-logging-1.1.1.jar"
+     dest="${taskDir}"/>
+
+<taskdef resource="cargo.tasks">
+  <classpath>
+    <fileset dir="${taskDir}" includes="*.jar"/>
+  </classpath>
+</taskdef>
+</target>
+
+<target name="deploy" depends="prepare-cargo-task">
+<cargo containerId="${type}" action="redeploy" type="remote">
+  <configuration type="runtime">
+    <property name="cargo.hostname" value="${hostname}"/>
+    <property name="cargo.servlet.port" value="${port}"/>
+    <property name="cargo.remote.username" value="${username}"/>
+    <property name="cargo.remote.password" value="${password}"/>
+    <deployable type="war" file="${war.file}">
+      <property name="context" value="${context}"/>
+    </deployable>
+  </configuration>
+</cargo>
+</target>
+
+</project>]]></param>
+          <param name="build-file-path" value="build.xml" />
+          <param name="target" value="deploy" />
+          <param name="teamcity.coverage.emma.include.source" value="true" />
+          <param name="teamcity.coverage.emma.instr.parameters" value="-ix -*Test*" />
+          <param name="teamcity.coverage.idea.includePatterns" value="*" />
+          <param name="teamcity.step.mode" value="default" />
+          <param name="use-custom-build-file" value="true" />
+        </parameters>
+      </runner>
+    </build-runners>
+    <requirements />
+  </settings>
+</meta-runner>
+
