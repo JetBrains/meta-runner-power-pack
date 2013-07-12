@@ -6,15 +6,15 @@
   <description />
   <settings>
     <parameters>
-      <param name="system.clean.dest.dir" value="false" spec="checkbox checkedValue='true' description='Enable if destination directory must be cleaned before uploading files' display='normal' label='Clean destination directory:' uncheckedValue='false'" />
-      <param name="system.dest.dir" value="" spec="text description='Directory on FTP server where to put files (if empty - default directory for given username will be used)' display='normal' label='Destination directory:' validationMode='any'" />
-      <param name="system.exclude.pattern" value="" spec="text description='Ant-like exclude pattern for files in source directory' display='normal' label='Exclude pattern:' validationMode='any'" />
-      <param name="system.ftp.password" value="zxx775d03cbe80d301b" spec="password display='normal' label='Password:'" />
-      <param name="system.ftp.port" value="21" spec="text display='normal' label='FTP server port:' regexp='|[0-9|]+' validationMessage='Invalid port number' validationMode='regex'" />
       <param name="system.ftp.server" value="" spec="text description='FTP server address' display='normal' label='FTP host:' validationMode='not_empty'" />
+      <param name="system.ftp.port" value="21" spec="text display='normal' label='FTP server port:' regexp='|[0-9|]+' validationMessage='Invalid port number' validationMode='regex'" />
       <param name="system.ftp.user" value="" spec="text display='normal' label='Username:' validationMode='any'" />
-      <param name="system.include.pattern" value="**/*" spec="text description='Ant-like include pattern for files in source directory' display='normal' label='Include pattern:' validationMode='not_empty'" />
+      <param name="system.ftp.password" value="zxx775d03cbe80d301b" spec="password display='normal' label='Password:'" />
       <param name="system.src.dir" value="" spec="text description='Directory with files for upload (if empty - current directory will be used)' display='normal' label='Source directory:' validationMode='any'" />
+      <param name="system.include.pattern" value="**/*" spec="text description='Ant-like include pattern for files in source directory' display='normal' label='Include pattern:' validationMode='not_empty'" />
+      <param name="system.exclude.pattern" value="" spec="text description='Ant-like exclude pattern for files in source directory' display='normal' label='Exclude pattern:' validationMode='any'" />
+      <param name="system.dest.dir" value="" spec="text description='Directory on FTP server where to put files (if empty - default directory for given username will be used)' display='normal' label='Destination directory:' validationMode='any'" />
+      <param name="system.clean.dest.dir" value="false" spec="checkbox checkedValue='true' description='Enable if destination directory must be cleaned before uploading files' display='normal' label='Clean destination directory:' uncheckedValue='false'" />
     </parameters>
     <build-runners>
       <runner id="RUNNER_24" name="" type="Ant">
