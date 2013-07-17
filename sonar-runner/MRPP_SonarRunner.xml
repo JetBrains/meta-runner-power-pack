@@ -20,7 +20,7 @@
 
       <param name="system.sonar.profile" spec="text description='Associate one of assigned quality profiles to a given project.' label='Sonar profile:'" value="" />
 
-      <param name="system.sonar.dynamicAnalysis" value="reuseReports" spec="select data_1='false' data_2='reuseReports' description='When reusing reports Sonar will parse tests and coverage reports. Set to 'false' when static analisys is needed only.' display='normal' label='Sonar analysis mode:'" />
+      <param name="system.sonar.dynamicAnalysis" value="reuseReports" spec="select data_1='false' data_2='reuseReports' description='When reusing reports Sonar will parse tests and coverage reports. Set to |'false|' when only static analisys is needed.' display='normal' label='Sonar analysis mode:'" />
 
       <param name="system.sonar.binaries" value="" spec="text description='Comma-separated paths to directories containing binaries (in case of Java: directories with class files).' display='normal' label='Additional binaries:' validationMode='any'" />
       <param name="system.sonar.libraries" value="" spec="text description='Comma-separated paths to files with third-party libraries (in case of Java: JAR files). Pattern can be used.' label='Libraries:'" />
