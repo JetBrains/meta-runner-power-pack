@@ -12,6 +12,7 @@ Available Meta-Runners
 * Trigger Custom Build (triggers a build in TeamCity optionally with custom parameters)
 * Add Tags to Build (adds tags to currently running build in TeamCity)
 * Deploy War (deploys war file to servlet container)
+* Sonar Runner (Runner for Sonar)
 * PHP-related meta runners(see [documentation](https://github.com/JetBrains/meta-runner-power-pack/blob/master/php/documentation/documentation.md))
 	* Run arbitrary PHP code
 	* Install a specific Composer dependency
