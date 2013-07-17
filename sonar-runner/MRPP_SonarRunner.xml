@@ -1,0 +1,143 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<meta-runner name="Sonar Runner">
+  <description>Execute Sonar Runner</description>
+  <settings>
+    <parameters>
+      <param name="system.sonar.executable.path" spec="text description='Path to SonarQube Runner executable. Consider using agent property here.' label='Sonar Runner executable:' validationMode='not_empty'" value="" />
+
+      <param name="system.sonar.projectKey" value="" spec="text description='The project key that is unique for each project. %teamcity.project.id% could be used here.' label='Project key:' validationMode='any'" />
+      <param name="system.sonar.projectName" value="" spec="text description='Name of the project that will be displayed on the web interface. %system.teamcity.projectName% could be used here.' label='Project name:' validationMode='any'" />
+      <param name="system.sonar.projectVersion" value="" spec="text description='The project version. %build.number% could be used here.' label='Project version:' validationMode='any'" />
+      <param name="system.sonar.projectDescription" value="" spec="text description='Description of the project.' label='Project description:'" />
+      <param name="system.sonar.language" value="" spec="text description='Set the language of source code. If a plugin allows to analyze another language, the associated source code analyser can be activated with this property.' label='Sources language:'" />
+      <param name="system.sonar.sources" value="" spec="text description='Comma-separated paths to directories containing sources.' label='Sources paths:'" />
+      <param name="system.sonar.tests" value="" spec="text description='Comma-separated paths to directories containing tests.' label='Tests paths:'" />
+
+      <param name="system.sonar.host.url" value="" spec="text description='URL to Sonar instance.' label='Sonar host:'" />
+      <param name="system.sonar.jdbc.url" value="" spec="text description='Database URL as specified in Sonar. Could be empty if Sonar is run on default database.' validationMode='any' label='JDBC URL:'" />
+      <param name="system.sonar.jdbc.password" value="" spec="text description='Database password. Could be empty if Sonar is run on default database.' validationMode='any' label='JDBC password:'" />
+      <param name="system.sonar.jdbc.username" value="" spec="text description='Database username. Could be empty if Sonar is run on default database.' validationMode='any' label='JDBC username:'" />
+
+      <param name="system.sonar.profile" spec="text description='Associate one of assigned quality profiles to a given project.' label='Sonar profile:'" value="" />
+
+      <param name="system.sonar.dynamicAnalysis" value="reuseReports" spec="select data_1='false' data_2='reuseReports' description='When reusing reports Sonar will parse tests and coverage reports. Set to |'false|' when only static analisys is needed.' display='normal' label='Sonar analysis mode:'" />
+
+      <param name="system.sonar.binaries" value="" spec="text description='Comma-separated paths to directories containing binaries (in case of Java: directories with class files).' display='normal' label='Additional binaries:' validationMode='any'" />
+      <param name="system.sonar.libraries" value="" spec="text description='Comma-separated paths to files with third-party libraries (in case of Java: JAR files). Pattern can be used.' label='Libraries:'" />
+      <param name="system.sonar.surefire.reportsPath" value="" spec="text description='Path to test reports directory.' label='Reports path:'"/>
+      <param name="system.sonar.additional.parameters" spec="text description='Any additional parameters to pass to Sonar Runner' label='Additional parameters:'" value="" />
+    </parameters>
+    <build-runners>
+      <runner name="Run SonarRunner from Ant" type="Ant">
+        <parameters>
+          <param name="build-file"><![CDATA[<project default="run-sonar">
+    <target name="run-sonar" depends="-prepare-optional-properties,-run-sonar-cli-args"/>
+
+    <target name="-run-sonar-cli-args" unless="property-file-mode" depends="-check-obligatory-properties">
+        <exec-sonar/>
+    </target>
+
+    <target name="-prepare-optional-properties">
+        <propagate-if-is-set prop="sonar.host.url"/>
+        <propagate-if-is-set prop="sonar.jdbc.url"/>
+        <propagate-if-is-set prop="sonar.jdbc.username"/>
+        <propagate-if-is-set prop="sonar.jdbc.password"/>
+
+        <propagate-if-is-set prop="sonar.projectDescription"/>
+        <propagate-if-is-set prop="sonar.binaries"/>
+        <propagate-if-is-set prop="sonar.tests"/>
+        <propagate-if-is-set prop="sonar.libraries"/>
+        <propagate-if-is-set prop="sonar.profile"/>
+        <propagate-if-is-set prop="sonar.dynamicAnalysis"/>
+        <propagate-if-is-set prop="sonar.surefire.reportsPath"/>
+    </target>
+
+    <target name="-check-obligatory-properties">
+        <fail-if-is-not-set prop="sonar.executable.path"/>
+        <available file="${sonar.executable.path}" property="file.available-sonar.executable" type="file"/>
+        <fail unless="${file.available-sonar.executable}" message="Not found Sonar Runner executable in '${file.available-sonar.executable}'"/>
+        <fail-if-is-not-set prop="sonar.projectKey"/>
+        <fail-if-is-not-set prop="sonar.projectName"/>
+        <fail-if-is-not-set prop="sonar.projectVersion"/>
+        <fail-if-is-not-set prop="sonar.language"/>
+        <fail-if-is-not-set prop="sonar.sources"/>
+    </target>
+
+    <macrodef name="exec-sonar">
+        <element name="exec-args" optional="true"/>
+        <sequential>
+            <exec executable="${sonar.executable.path}" failonerror="true">
+                <exec-args/>
+                <arg value="-D"/><arg value="sonar.projectKey=${sonar.projectKey}"/>
+                <arg value="-D"/><arg value="sonar.projectName=${sonar.projectName}"/>
+                <arg value="-D"/><arg value="sonar.projectVersion=${sonar.projectVersion}"/>
+                <arg value="-D"/><arg value="sonar.language=${sonar.language}"/>
+                <arg value="-D"/><arg value="sonar.sources=${sonar.sources}"/>
+                <arg value="${set-D-sonar.host.url}"/><arg value="${set-sonar.host.url}"/>
+                <arg value="${set-D-sonar.jdbc.url}"/><arg value="${set-sonar.jdbc.url}"/>
+                <arg value="${set-D-sonar.jdbc.username}"/><arg value="${set-sonar.jdbc.username}"/>
+                <arg value="${set-D-sonar.jdbc.password}"/><arg value="${set-sonar.jdbc.password}"/>
+                <arg value="${set-D-sonar.projectDescription}"/><arg value="${set-sonar.projectDescription}"/>
+                <arg value="${set-D-sonar.binaries}"/><arg value="${set-sonar.binaries}"/>
+                <arg value="${set-D-sonar.tests}"/><arg value="${set-sonar.tests}"/>
+                <arg value="${set-D-sonar.libraries}"/><arg value="${set-sonar.libraries}"/>
+                <arg value="${set-D-sonar.profile}"/><arg value="${set-sonar.profile}"/>
+                <arg value="${set-D-sonar.dynamicAnalysis}"/><arg value="${set-sonar.dynamicAnalysis}"/>
+                <arg value="${set-D-sonar.surefire.reportsPath}"/><arg value="${set-sonar.surefire.reportsPath}"/>
+                <arg line="${sonar.additional.parameters}"/>
+            </exec>
+        </sequential>
+    </macrodef>
+
+    <macrodef name="is-set-and-not-empty">
+        <attribute name="prop"/>
+        <sequential>
+            <condition property="isset-@{prop}">
+                <and>
+                    <length string="${@{prop}}" when="greater" trim="true" length="0"/>
+                    <isset property="@{prop}"/>
+                </and>
+            </condition>
+        </sequential>
+    </macrodef>
+
+    <macrodef name="fail-if-is-not-set">
+        <attribute name="prop"/>
+        <sequential>
+            <is-set-and-not-empty prop="@{prop}"/>
+            <fail unless="${isset-@{prop}}" message="Property @{prop} should be set"/>
+        </sequential>
+    </macrodef>
+
+    <macrodef name="propagate-if-is-set">
+        <attribute name="prop"/>
+        <sequential>
+            <is-set-and-not-empty prop="@{prop}"/>
+            <condition property="set-@{prop}" value="@{prop}=${@{prop}}">
+                <istrue value="${isset-@{prop}}"/>
+            </condition>
+            <condition property="set-D-@{prop}" value="-D">
+                <istrue value="${isset-@{prop}}"/>
+            </condition>
+            <condition property="set-@{prop}" value="blank=blank">
+                <isfalse value="${isset-@{prop}}"/>
+            </condition>
+            <condition property="set-D-@{prop}" value="-D">
+                <isfalse value="${isset-@{prop}}"/>
+            </condition>
+        </sequential>
+    </macrodef>
+</project>]]></param>
+          <param name="build-file-path" value="build.xml" />
+          <param name="teamcity.coverage.emma.include.source" value="true" />
+          <param name="teamcity.coverage.emma.instr.parameters" value="-ix -*Test*" />
+          <param name="teamcity.coverage.idea.includePatterns" value="*" />
+          <param name="teamcity.step.mode" value="default" />
+          <param name="use-custom-build-file" value="true" />
+        </parameters>
+      </runner>
+    </build-runners>
+    <requirements />
+  </settings>
+</meta-runner>
+
