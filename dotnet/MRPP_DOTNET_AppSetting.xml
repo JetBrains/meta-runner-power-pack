@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<meta-runner name=".NET - Update AppSetting">
+  <description>Update AppSetting. Note an AppSetting with the correct key must be defined in the configuration file.</description>
+  <settings>
+    <parameters>
+      <param name="system.config.file" value="" spec="text description='Confguration file in which the AppSetting should be updated' display='normal' label='Configuration file' validationMode='not_empty'" />
+      <param name="system.appsetting.key" value="" spec="text description='Key of the AppSetting to update' display='normal' label='AppSetting key' validationMode='not_empty'" />
+      <param name="system.appsetting.value" value="" spec="text description='The new AppSetting value' display='normal' label='AppSetting value' validationMode='not_empty'" />
+    </parameters>
+    <build-runners>
+      <runner name="AppSettings" type="Ant">
+        <parameters>
+          <param name="build-file">&lt;project name="Update AppSettings"&gt;
+  &lt;target name="update-config-file"&gt;
+	&lt;tempfile property="temp.config.file" /&gt;
+	&lt;copy file="${config.file}" tofile="${temp.config.file}"/&gt;
+	&lt;xslt in="${temp.config.file}" out="${config.file}"&gt;
+	  &lt;style&gt;
+	    &lt;string&gt;&lt;![CDATA[&lt;?xml version="1.0"?&gt;
+&lt;xsl:stylesheet version="1.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform"&gt;
+  &lt;xsl:template match="@*|node()"&gt;
+    &lt;xsl:copy&gt;
+      &lt;xsl:apply-templates select="@*|node()"/&gt;
+    &lt;/xsl:copy&gt;
+  &lt;/xsl:template&gt;
+  
+  &lt;xsl:template match="/configuration/appSettings/add[@key='${appsetting.key}']/@value"&gt;
+    &lt;xsl:attribute name='value'&gt;${appsetting.value}&lt;/xsl:attribute&gt;
+  &lt;/xsl:template&gt;
+&lt;/xsl:stylesheet&gt;]]&gt;&lt;/string&gt;
+      &lt;/style&gt;
+    &lt;/xslt&gt;
+  &lt;/target&gt;
+&lt;/project&gt;</param>
+          <param name="build-file-path" value="build.xml" />
+          <param name="target" value="update-config-file" />
+          <param name="teamcity.coverage.emma.include.source" value="true" />
+          <param name="teamcity.coverage.emma.instr.parameters" value="-ix -*Test*" />
+          <param name="teamcity.coverage.idea.includePatterns" value="*" />
+          <param name="teamcity.step.mode" value="default" />
+          <param name="use-custom-build-file" value="true" />
+        </parameters>
+      </runner>
+    </build-runners>
+    <requirements />
+  </settings>
+</meta-runner>
+

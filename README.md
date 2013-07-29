@@ -19,6 +19,9 @@ Available Meta-Runners
 	* Install/update packages from composer.json
 	* Run Phing build script
 	* Run PHPUnit tests (with code coverage reporting)
+* .NET-related meta runners
+	* Update connection string in configuration file
+	* Update appsetting value in configuration file
 
 
 Installation Instructions
