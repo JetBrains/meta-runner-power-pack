@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<meta-runner name="Install Composer package">
+<meta-runner name="PHP - Install Composer package">
   <description>Install a specific Composer package</description>
   <settings>
     <parameters>
