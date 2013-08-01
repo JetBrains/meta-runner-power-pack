@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<meta-runner name="Gerrit Verification">
+  <description>Verifies Gerrit changes</description>
+  <settings>
+    <parameters>
+      <param name="system.gerrit.project.name" value="" spec="text display='normal' label='Gerrit project name' validationMode='not_empty'" />
+      <param name="system.gerrit.commit" value="" spec="text display='normal' label='Gerrit commit for verification' validationMode='not_empty'" />
+      <param name="system.gerrit.success.vote" value="+1" spec="text display='normal' label='Succesful build vote' validationMode='not_empty'" />
+      <param name="system.gerrit.failure.vote" value="-1" spec="text display='normal' label='Failed build vote' validationMode='not_empty'" />
+      <param name="system.gerrit.username" value="" spec="text display='normal' label='Gerrit username' validationMode='not_empty'" />
+      <param name="system.gerrit.password" value="zxx775d03cbe80d301b" spec="password display='normal' label='Gerrit password'" />
+    </parameters>
+    <build-runners>
+      <runner name="Publish build status" type="Ant">
+        <parameters>
+          <param name="build-file"><![CDATA[<project name="publish-build-status" default="publish-status">
+
+  <target name="publish-status" unless="%teamcity.build.branch.is_default%">
+    <echo>##teamcity[setParameter name='system.gerrit.verification.successful' value='true']</echo>
+  </target>
+
+</project>]]></param>
+          <param name="build-file-path" value="build.xml" />
+          <param name="teamcity.coverage.emma.include.source" value="true" />
+          <param name="teamcity.coverage.emma.instr.parameters" value="-ix -*Test*" />
+          <param name="teamcity.coverage.idea.includePatterns" value="*" />
+          <param name="teamcity.step.mode" value="default" />
+          <param name="use-custom-build-file" value="true" />
+        </parameters>
+      </runner>
+      <runner name="Verify" type="Ant">
+        <parameters>
+          <param name="build-file"><![CDATA[<project name="gerrit.verify" default="verify">
+
+  <target name="verify" unless="%teamcity.build.branch.is_default%">
+
+    <condition property="gerrit.vote" value="%system.gerrit.success.vote%" else="%system.gerrit.failure.vote%">
+      <isset property="gerrit.verification.successful"/>
+    </condition>
+
+    <condition property="gerrit.message" value="Build successful" else="Build failed">
+      <isset property="gerrit.verification.successful"/>
+    </condition>
+
+    <sshexec host="gerrit"
+	username="%system.gerrit.username%"
+	password="%system.gerrit.password%"
+	keyfile="${user.home}/.ssh/id_rsa"
+        trust="true"
+        port="29418"
+ 	command="gerrit review --project %system.gerrit.project.name% --verified ${gerrit.vote} -m '${gerrit.message}' %system.gerrit.commit%"/>
+
+  </target>
+
+</project>]]></param>
+          <param name="build-file-path" value="build.xml" />
+          <param name="runnerArgs" value="-lib %teamcity.agent.home.dir%/plugins/jetbrains.git/lib/jsch-0.1.44.jar" />
+          <param name="teamcity.coverage.emma.include.source" value="true" />
+          <param name="teamcity.coverage.emma.instr.parameters" value="-ix -*Test*" />
+          <param name="teamcity.coverage.idea.includePatterns" value="*" />
+          <param name="teamcity.step.mode" value="execute_if_failed" />
+          <param name="use-custom-build-file" value="true" />
+        </parameters>
+      </runner>
+    </build-runners>
+    <requirements />
+  </settings>
+</meta-runner>
