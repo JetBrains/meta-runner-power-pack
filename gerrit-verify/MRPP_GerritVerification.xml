@@ -4,7 +4,7 @@
   <settings>
     <parameters>
       <param name="system.gerrit.project.name" value="" spec="text display='normal' label='Gerrit project name' validationMode='not_empty'" />
-      <param name="system.gerrit.commit" value="" spec="text display='normal' label='Gerrit commit for verification' validationMode='not_empty'" />
+      <param name="system.gerrit.commit" value="%build.vcs.number.1%" spec="text display='normal' label='Gerrit commit for verification' validationMode='not_empty'" />
       <param name="system.gerrit.success.vote" value="+1" spec="text display='normal' label='Succesful build vote' validationMode='not_empty'" />
       <param name="system.gerrit.failure.vote" value="-1" spec="text display='normal' label='Failed build vote' validationMode='not_empty'" />
       <param name="system.gerrit.username" value="" spec="text display='normal' label='Gerrit username' validationMode='not_empty'" />
