@@ -12,25 +12,8 @@
       <runner name="" type="Ant">
         <parameters>
           <param name="build-file"><![CDATA[<project name="Custom build">
-<property name="taskDir" location="${teamcity.build.tempDir}/http-task"/>
-<property name="httpTaskZip" value="ml-ant-http-1.1.3.zip"/>
 
-<target name="prepare-http-task">
-<mkdir dir="${taskDir}"/>
-<get src="http://missing-link.googlecode.com/files/${httpTaskZip}"
-     dest="${taskDir}"/>
-
-<unzip src="${taskDir}/${httpTaskZip}"
-       dest="${taskDir}"/>
-
-<taskdef name="http" classname="org.missinglink.ant.task.http.HttpClientTask">
-  <classpath>
-    <fileset dir="${taskDir}">
-      <include name="**/*.jar"/>
-    </fileset>
-  </classpath>
-</taskdef>
-</target>
+<taskdef name="http" classname="org.missinglink.ant.task.http.HttpClientTask"/>
 
 <property name="reqParams.file" location="${teamcity.build.tempDir}/rawParams.txt"/>
 
@@ -50,7 +33,7 @@
 <echo file="${reqParams.file}" append="true">&amp;add2Queue=${buildConf.id}</echo>
 </target>
 
-<target name="add2Queue" depends="prepare-http-task, prepare-params">
+<target name="add2Queue" depends="prepare-params">
 <http url="%teamcity.serverUrl%/httpAuth/action.html" 
       method="POST" 
       expected="200"
@@ -63,6 +46,7 @@
 </project>]]></param>
           <param name="build-file-path" value="build.xml" />
           <param name="target" value="add2Queue" />
+          <param name="runnerArgs" value="-lib %teamcity.tool.ant-net-tasks%" />
           <param name="teamcity.coverage.emma.include.source" value="true" />
           <param name="teamcity.coverage.emma.instr.parameters" value="-ix -*Test*" />
           <param name="teamcity.coverage.idea.includePatterns" value="*" />
