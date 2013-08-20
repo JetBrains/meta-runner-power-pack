@@ -6,33 +6,16 @@
   <description />
   <settings>
     <parameters>
+      <param name="system.username" value="" spec="text description='Username of a user who performs action' display='normal' label='Username:' validationMode='not_empty'" />
       <param name="system.password" value="" spec="password description='Password of a user who performs action' display='normal' label='Password:'" />
       <param name="system.tags" value="" spec="text description='Space separated tags for build' display='normal' label='Tags:' validationMode='not_empty'" />
-      <param name="system.username" value="" spec="text description='Username of a user who performs action' display='normal' label='Username:' validationMode='not_empty'" />
     </parameters>
     <build-runners>
       <runner id="RUNNER_12" name="" type="Ant">
         <parameters>
           <param name="build-file">&lt;project name="Add build tags"&gt;
-&lt;property name="taskDir" location="${teamcity.build.tempDir}/http-task"/&gt;
-&lt;property name="httpTaskZip" value="ml-ant-http-1.1.3.zip"/&gt;
 
-&lt;target name="prepare-http-task"&gt;
-&lt;mkdir dir="${taskDir}"/&gt;
-&lt;get src="http://missing-link.googlecode.com/files/${httpTaskZip}"
-     dest="${taskDir}"/&gt;
-
-&lt;unzip src="${taskDir}/${httpTaskZip}"
-       dest="${taskDir}"/&gt;
-
-&lt;taskdef name="http" classname="org.missinglink.ant.task.http.HttpClientTask"&gt;
-  &lt;classpath&gt;
-    &lt;fileset dir="${taskDir}"&gt;
-      &lt;include name="**/*.jar"/&gt;
-    &lt;/fileset&gt;
-  &lt;/classpath&gt;
-&lt;/taskdef&gt;
-&lt;/target&gt;
+&lt;taskdef name="http" classname="org.missinglink.ant.task.http.HttpClientTask"/&gt;
 
 &lt;property name="tags.file" location="${teamcity.build.tempDir}/tags.txt"/&gt;
 &lt;property name="reqParams.file" location="${teamcity.build.tempDir}/rawParams.txt"/&gt;
@@ -65,7 +48,7 @@
 
 &lt;/target&gt;
 
-&lt;target name="addTags" depends="prepare-http-task, prepare-params"&gt;
+&lt;target name="addTags" depends="prepare-params"&gt;
 &lt;http url="%teamcity.serverUrl%/httpAuth/api/builds/id:%teamcity.build.id%/tags" 
       method="POST" 
       expected="204"
@@ -81,6 +64,7 @@
 &lt;/project&gt;</param>
           <param name="build-file-path" value="build.xml" />
           <param name="target" value="addTags" />
+          <param name="runnerArgs" value="-lib %teamcity.tool.ant-net-tasks%" />
           <param name="teamcity.coverage.emma.include.source" value="true" />
           <param name="teamcity.coverage.emma.instr.parameters" value="-ix -*Test*" />
           <param name="teamcity.coverage.idea.includePatterns" value="*" />
