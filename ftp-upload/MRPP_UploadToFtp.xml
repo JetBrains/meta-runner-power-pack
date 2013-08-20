@@ -20,6 +20,7 @@
       <runner id="RUNNER_24" name="" type="Ant">
         <parameters>
           <param name="build-file"><![CDATA[<project name="FTP upload">
+<taskdef name="ftp" classname="org.apache.tools.ant.taskdefs.optional.net.FTP"/>
 
 <property name="temp" value="${teamcity.build.tempDir}/ftpTemp"/>
 <condition property="dest.dir.set">
@@ -31,19 +32,6 @@
 
 <target name="prepare-ftp">
 <mkdir dir="${temp}"/>
-
-<get src="http://repo2.maven.org/maven2/commons-net/commons-net/2.0/commons-net-2.0.jar" 
-dest="${temp}/commons-net-2.0.jar" verbose="true"/>
-
-<get src="http://bit.ly/bdHM3A" dest="${temp}/ant-classloadertask-1.0-RC2.zip" verbose="true"/>
-<unzip src="${temp}/ant-classloadertask-1.0-RC2.zip" dest="${temp}">
-<fileset dir="ant-classloadertask-1.0-RC2" file="ant-classloadertask.jar"/>
-</unzip>
-
-<!--suppress AntResolveInspection -->
-<taskdef resource="net/jtools/classloadertask/antlib.xml" classpath="${temp}/ant-classloadertask-1.0-RC2/ant-classloadertask.jar"/>
-<classloader loader="system" classpath="${temp}/commons-net-2.0.jar"/>
-<taskdef name="ftp" classname="org.apache.tools.ant.taskdefs.optional.net.FTP"/>
 </target>
 
 <target name="put-files" depends="prepare-ftp, clean-remote-dir, create-remote-dir">
@@ -92,6 +80,7 @@ dest="${temp}/commons-net-2.0.jar" verbose="true"/>
 </project>]]></param>
           <param name="build-file-path" value="build.xml" />
           <param name="target" value="put-files" />
+          <param name="runnerArgs" value="-lib %teamcity.tool.ant-net-tasks%" />
           <param name="teamcity.coverage.emma.include.source" value="true" />
           <param name="teamcity.coverage.emma.instr.parameters" value="-ix -*Test*" />
           <param name="teamcity.coverage.idea.includePatterns" value="*" />
