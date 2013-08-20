@@ -54,7 +54,7 @@
 
 </project>]]></param>
           <param name="build-file-path" value="build.xml" />
-          <param name="runnerArgs" value="-lib %teamcity.agent.home.dir%/plugins/jetbrains.git/lib/jsch-0.1.44.jar" />
+          <param name="runnerArgs" value="-lib %teamcity.tool.ant-net-tasks%" />
           <param name="teamcity.coverage.emma.include.source" value="true" />
           <param name="teamcity.coverage.emma.instr.parameters" value="-ix -*Test*" />
           <param name="teamcity.coverage.idea.includePatterns" value="*" />
