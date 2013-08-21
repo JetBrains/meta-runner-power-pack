@@ -30,7 +30,7 @@ Installation Instructions
 
 Each file with name **MRPP_\<some text\>.xml** contains a definition of a single [Meta-runner](http://confluence.jetbrains.com/display/TCD8/Working+with+Meta-Runner).
 
-To install Meta-runner, take Meta-runner definition file and put it into [\<TeamCity Data Directory\>](http://confluence.jetbrains.com/display/TCD8/TeamCity+Data+Directory)/projects/\<Project ID\>/pluginData/metaRunners/ directory.
+To install Meta-runner, take Meta-runner definition file and put it into [\<TeamCity Data Directory\>](http://confluence.jetbrains.com/display/TCD8/TeamCity+Data+Directory)/config/projects/\<Project ID\>/pluginData/metaRunners/ directory.
 
 Where **\<Project ID\>** is the identifier of a project where you want to place the Meta-runner. If **metaRunners** directory does not exist it should be created.
 Once you place the file on disk, TeamCity will detect it and load this Meta-runner, no server restart is required. 
