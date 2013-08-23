@@ -3,6 +3,7 @@
   <description>Verifies Gerrit changes</description>
   <settings>
     <parameters>
+      <param name="system.gerrit.host" value="" spec="text display='normal' label='Gerrit server' validationMode='not_empty'" />
       <param name="system.gerrit.project.name" value="" spec="text display='normal' label='Gerrit project name' validationMode='not_empty'" />
       <param name="system.gerrit.commit" value="%build.vcs.number%" spec="text display='normal' label='Gerrit commit for verification' validationMode='not_empty'" />
       <param name="system.gerrit.success.vote" value="+1" spec="text display='normal' label='Succesful build vote' validationMode='not_empty'" />
@@ -42,7 +43,7 @@
       <isset property="gerrit.verification.successful"/>
     </condition>
 
-    <sshexec host="gerrit"
+    <sshexec host="%system.gerrit.host%"
 	username="%system.gerrit.username%"
 	password="%system.gerrit.password%"
 	keyfile="${user.home}/.ssh/id_rsa"
