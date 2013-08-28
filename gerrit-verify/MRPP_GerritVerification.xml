@@ -25,7 +25,7 @@
           <param name="teamcity.coverage.emma.include.source" value="true" />
           <param name="teamcity.coverage.emma.instr.parameters" value="-ix -*Test*" />
           <param name="teamcity.coverage.idea.includePatterns" value="*" />
-          <param name="teamcity.step.mode" value="default" />
+          <param name="teamcity.step.mode" value="execute_if_success" />
           <param name="use-custom-build-file" value="true" />
         </parameters>
       </runner>
