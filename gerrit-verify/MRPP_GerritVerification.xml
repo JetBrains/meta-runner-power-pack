@@ -3,6 +3,7 @@
   <description>Verifies Gerrit changes</description>
   <settings>
     <parameters>
+      <param name="system.gerrit.host" value="" spec="text display='normal' label='Gerrit server' validationMode='not_empty'" />
       <param name="system.gerrit.project.name" value="" spec="text display='normal' label='Gerrit project name' validationMode='not_empty'" />
       <param name="system.gerrit.commit" value="%build.vcs.number%" spec="text display='normal' label='Gerrit commit for verification' validationMode='not_empty'" />
       <param name="system.gerrit.success.vote" value="+1" spec="text display='normal' label='Succesful build vote' validationMode='not_empty'" />
@@ -24,7 +25,7 @@
           <param name="teamcity.coverage.emma.include.source" value="true" />
           <param name="teamcity.coverage.emma.instr.parameters" value="-ix -*Test*" />
           <param name="teamcity.coverage.idea.includePatterns" value="*" />
-          <param name="teamcity.step.mode" value="default" />
+          <param name="teamcity.step.mode" value="execute_if_success" />
           <param name="use-custom-build-file" value="true" />
         </parameters>
       </runner>
@@ -42,7 +43,7 @@
       <isset property="gerrit.verification.successful"/>
     </condition>
 
-    <sshexec host="gerrit"
+    <sshexec host="%system.gerrit.host%"
 	username="%system.gerrit.username%"
 	password="%system.gerrit.password%"
 	keyfile="${user.home}/.ssh/id_rsa"
