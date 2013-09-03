@@ -26,7 +26,7 @@
                byline="true"
 />
 <replaceregexp file="${reqParams.file}"
-               match="\r\n"
+               match="[\r\n]+"
                replace="&amp;"
                flags="gm"
 />
