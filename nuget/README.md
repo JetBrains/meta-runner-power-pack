@@ -1,6 +1,10 @@
 ## What?
 Sometimes you just want to install something from NuGet as part of a build that can't be handled via package restore. Then this meta-runner is for you.
 
+## Prerequisites etc.
+Depends on TeamCity as a NuGet server (you need the feature turned on in TeamCity).
+It uses the default nuget.exe
+
 ## Example
 An example could be to install [NUnit.Runners](http://www.nuget.org/packages/NUnit.Runners/) as part of a build configuration and then use it in a later step.
 
