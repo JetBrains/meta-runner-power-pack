@@ -23,6 +23,10 @@ Available Meta-Runners
 * .NET-related meta runners
 	* Update connection string in configuration file
 	* Update appsetting value in configuration file
+* .NET/PowerShell-based meta-runners
+    * [NuGet install command](https://github.com/JetBrains/meta-runner-power-pack/tree/master/nuget)
+    * [PSGet installer](https://github.com/JetBrains/meta-runner-power-pack/tree/master/psget)
+    * [SemVer build number](https://github.com/JetBrains/meta-runner-power-pack/tree/master/semver-buildnumber)
 
 
 Installation Instructions
