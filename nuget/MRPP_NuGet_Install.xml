@@ -12,10 +12,11 @@
     <build-runners>
       <runner name="" type="jetbrains_powershell">
         <parameters>
-          <param name="jetbrains_powershell_bitness" value="x64" />
-          <param name="jetbrains_powershell_execution" value="STDIN" />
+          <param name="jetbrains_powershell_execution" value="PS1" />
           <param name="jetbrains_powershell_noprofile" value="true" />
+          <param name="jetbrains_powershell_errorToError" value="error" />
           <param name="jetbrains_powershell_script_mode" value="CODE" />
+          <param name="jetbrains_powershell_bitness" value="x86" />
           <param name="teamcity.step.mode" value="default" />
           <param name="jetbrains_powershell_script_code"><![CDATA[
 function Build-Arguments {
