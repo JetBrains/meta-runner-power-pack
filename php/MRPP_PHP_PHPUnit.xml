@@ -72,7 +72,7 @@
 </target>
 
 <target name="getPhpUnit" unless="phpunit.runtime.set">
-  <get src="http://pear.phpunit.de/get/phpunit.phar" dest="${teamcity.build.tempDir}" verbose="on" skipexisting="false"/>
+  <get src="http://phar.phpunit.de/phpunit.phar" dest="${teamcity.build.tempDir}" verbose="on" skipexisting="false"/>
 </target>
 
 </project>]]></param>
