@@ -18,6 +18,7 @@
           <param name="jetbrains_powershell_errorToError" value="error" />
           <param name="jetbrains_powershell_script_mode" value="CODE" />
           <param name="jetbrains_powershell_bitness" value="x86" />
+          <param name="jetbrains_powershell_minVersion" value="3.0" />
           <param name="teamcity.step.mode" value="default" />
           <param name="jetbrains_powershell_script_code">
             <![CDATA[
