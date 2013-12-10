@@ -1,0 +1,413 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<meta-runner name="PSBuild">
+  <description>A PowerShell wrapper for msbuild with OOB suuport for versioning.</description>
+  <settings>
+    <parameters>
+      <param name="mr.PSBuild.WorkingDirectory" value="" spec="text description='Change working directory. Relative from checkout dir.' display='normal' label='Working Directory:'" />
+      <param name="mr.PSBuild.BuildFile" value="" spec="text description='The specified path should be relative to the checkout directory.' display='normal' label='Build File (path):' validationMode='not_empty'" />
+      <param name="mr.PSBuild.MSBuild.Version" value="4.5" spec="select data_1='2.0' data_2='3.5' data_3='4.0' data_4='4.5' description='MSBuild version. Determines, along with bitness, the path to msbuild.exe' display='normal' label='MSBuild Version:'" />
+      <param name="mr.PSBuild.MSBuild.Bitness" value="x86" spec="select data_1='x64' data_2='x86' description='MSBuild bitness. Determines, along with version, the path to msbuild.exe' display='normal' label='Bitness:'" />
+      <param name="mr.PSBuild.MSBuild.ToolsVersion" value="12" spec="select data_1='' data_2='2.0' data_3='3.5' data_4='4.0' data_5='12.0' label_1='use project file' description='MSBuild ToolsVersion.' display='normal' label='MSBuild ToolsVersion:'" />
+      <param name="mr.PSBuild.MSBuild.Targets" value="" spec="text description='Builds the specified targets in the project instead of the default target. Use a semicolon or comma to separate multiple targets.' display='normal' label='Targets:'" />
+      <param name="mr.PSBuild.MSBuild.Configuration" value="" spec="text description='Configuration to build. Debug and Release are supported OOB. Leave blank to use default.' display='normal' label='Configuration:'" />
+      <param name="mr.PSBuild.MSBuild.Properties" value="" spec="text description='Set or override the specified project-level properties. Use a semicolon to separate multiple properties. e.g. name=value' display='normal' label='MSBuild Properties:'" />
+      <param name="mr.PSBuild.MSBuild.Arguments" value="" spec="text description='Any other arguments that will be passed to msbuild.exe (e.g. /m as an example)' display='normal' label='MSBuild Arguments:'" />
+      <param name="mr.PSBuild.Version" value="" spec="text description='Optional common assembly version (support for both semver and major.minor.build.revision). If set it will add/update assembly attributes of choice during build.' display='normal' label='Assembly Version:'" />
+      <param name="mr.PSBuild.AssemblyAttributesFormat" value="" spec="text description='Controls which assembly attributes gets updated with version information.' display='normal' label='Version Attributes:'" />
+      <param name="mr.PSBuild.AssemblyInformationFileLocation" value="" spec="text description='By default files named AssemblyInfo.cs will be found at any level. This lets you override that.' display='normal' label='Assembly Information File(s) Location:'" />
+      <param name="mr.PSBuild.Debug" value="SilentlyContinue" spec="checkbox checkedValue='Continue' description='Log debug messages?' display='normal' label='Debug:' uncheckedValue='SilentlyContinue'" />
+      <param name="mr.PSBuild.Verbose" value="SilentlyContinue" spec="checkbox checkedValue='Continue' description='Log verbose messages?' display='normal' label='Verbose:' uncheckedValue='SilentlyContinue'" />
+    </parameters>
+    <build-runners>
+      <runner name="PSBuild" type="jetbrains_powershell">
+        <parameters>
+          <param name="jetbrains_powershell_execution" value="PS1" />
+          <param name="jetbrains_powershell_minVersion" value="3.0" />
+          <param name="jetbrains_powershell_noprofile" value="true" />
+          <param name="jetbrains_powershell_errorToError" value="error" />
+          <param name="jetbrains_powershell_script_mode" value="CODE" />
+          <param name="jetbrains_powershell_bitness" value="x86" />
+          <param name="teamcity.step.mode" value="default" />
+          <param name="jetbrains_powershell_script_code">
+            <![CDATA[			    
+
+function Invoke-MSBuild {
+	[CmdletBinding()]
+	param()
+	begin {
+		Write-Verbose $("{0} [EXEC]" -f $MyInvocation.MyCommand)
+		if([String]::IsNullOrWhiteSpace($mr.WorkingDirectory) -eq $false) {
+			Write-Debug "Changing working directory:"
+			Set-Location $mr.WorkingDirectory
+			Write-Debug $mr.WorkingDirectory
+		}
+	}
+	
+	process {
+		
+		$msbuild_exe = Get-MSBuild
+		$build_file = Get-BuildFile		
+		
+		$arguments = @()
+		$arguments += $build_file
+		
+		$tools_version = Get-ToolsVersion
+		if($tools_version) {
+			$arguments += $("/tv:{0}" -f $tools_version)
+		}
+		
+		$targets = $mr.MSBuild.Targets
+		if($targets) {
+			$arguments += $("/t:{0}" -f $targets)
+		}
+		
+		$configuration = $mr.MSBuild.Configuration
+		if($configuration) {
+			$arguments += $("/p:Configuration={0}" -f $configuration)
+		}
+		
+		$properties = $mr.MSBuild.Properties
+		if($properties) {
+			$arguments += $("/p:{0}" -f $properties)
+		}
+		
+		$msbuild_arguments += $mr.MSBuild.Arguments -split ' '
+			foreach($arg in $msbuild_arguments) {
+				$arguments += $arg
+			}		
+	
+		Invoke-Executable $msbuild_exe $arguments -Before {Before-MSBuild} -After {After-MSBuild}
+	}	
+}
+
+function Before-MSBuild {
+	begin {Write-Verbose $("{0} [EXEC]" -f $MyInvocation.MyCommand)}
+	
+	process {
+		Get-AssemblyInformationFiles | % {
+			Write-Debug $_.FullName
+			Update-AssemblyInformation $_
+		} -Begin {Write-Debug "Updating assembly information files:"}
+	}
+	
+	end {
+		if($TeamCityMode) {
+			Write-Host "##teamcity[blockOpened name='MSBuild']"
+		}
+	}
+}
+
+function After-MSBuild {
+	begin {
+		if($TeamCityMode) {
+			Write-Host "##teamcity[blockClosed name='MSBuild']"
+		}
+		Write-Verbose $("{0} [EXEC]" -f $MyInvocation.MyCommand)
+	}
+	
+	process {
+		
+		$mr.TempFiles.Values | % {			
+			Write-Debug $("{0} (source/original)" -f $_.Original_FilePath)
+			Write-Debug $("{0} (dest/temp)" -f $_.Temp_FilePath)
+			
+			Move-Item -Path $_.Original_FilePath -Destination $_.Temp_FilePath -Force:$true			
+		} -Begin {Write-Debug "Restoring assembly information files:"}
+	}
+}
+
+function Invoke-Executable {
+	param(
+		[Parameter(ValueFromPipeline=$true)]
+		[String]$Exe,
+		[Array]$Parameters = @(),
+		[ScriptBlock]$Before = {},
+		[ScriptBlock]$After = {}
+	)
+	begin {
+		Write-Verbose $("{0} [EXEC]" -f $MyInvocation.MyCommand)
+		Write-Debug $("Invoking '{0}'" -f $Exe)
+		$Parameters | % {Write-Debug $_} -Begin {Write-Debug "With arguments:"}
+	}
+	
+	process {
+		& $Before
+		& $Exe $Parameters | Out-String
+		$success = $?	
+		
+		if($success -eq $false) {
+			throw $("failed to execute {0}" -f $Exe)
+		}
+		
+		& $After
+	}
+}
+
+function Get-AssemblyInformationFiles {
+	begin {Write-Verbose $("{0} [EXEC]" -f $MyInvocation.MyCommand)}
+	
+	process {
+	
+		if([String]::IsNullOrWhiteSpace($mr.Version) -eq $false) {	
+			$assemblyinfo_pattern = $mr.AssemblyInformationFileLocation
+			
+			$arguments = @{} 
+			if([String]::IsNullOrWhiteSpace($assemblyinfo_pattern)) {
+				$arguments.Recurse = $true
+				$arguments.Path = "AssemblyInfo.cs"
+			} else {
+				$arguments.Path = $assemblyinfo_pattern
+			}
+			
+			Write-Debug "Invoking 'Get-ChildItem'"
+			$arguments.Keys | % { Write-Debug $("-{0}:{1}" -f $_,$arguments[$_])} -Begin {Write-Debug "With arguments:" }
+			return Get-ChildItem @arguments
+			
+		}
+		
+		Write-Debug "No global version information available. Interpreted as skip assembly version update."
+		return @()		
+	}
+}
+
+function Update-AssemblyInformation {
+	param(
+		$File
+	)
+	begin {
+			Write-Verbose $("{0} [EXEC]" -f $MyInvocation.MyCommand)
+			
+			$Version = $($mr.Version -split '\+' -split '-')
+			$SemVer = $Version -is [Array]
+			if($SemVer) {
+				Write-Debug $("SemVer detected ({0})" -f $mr.Version)
+				$Version = $Version[0]
+			}
+			
+			if([String]::IsNullOrWhiteSpace($mr.AssemblyAttributesFormat)) {
+				Write-Debug "No attributes specified. Using defaults."
+				$mr.AssemblyAttributesFormat = "AssemblyVersion;AssemblyFileVersion"
+				
+				if($SemVer) {
+					Write-Debug "Adding SemVer compatible attribute."
+					$mr.AssemblyAttributesFormat += ";AssemblyInformationalVersion"
+				}
+			}
+			
+			if($mr.ContainsKey("TempFiles") -eq $false) {
+				$mr.TempFiles = @{}
+			}
+			
+		}
+	
+	process {
+			
+		$original_file = Copy-Item $File -Destination $(Join-Path $File.DirectoryName ([System.IO.Path]::GetRandomFileName())) -PassThru
+		$mr.TempFiles.Add($file.FullName, @{
+			Original_FilePath = $original_file.FullName
+			Temp_FilePath = $File.FullName  
+		})
+		Write-Debug $("Original File: {0}" -f $original_file.FullName)
+		Write-Debug $("Temporary File: {0}" -f $File.FullName)	
+			
+								
+		$attributes = $mr.AssemblyAttributesFormat -split ';'
+		$attributes | % {
+			Write-Debug $_
+				
+			$pattern = $('^\[assembly\: {0}\(".*\)\]' -f $_)
+			$content = Get-Content $File
+				
+			$custom_version = $($_ -split '=')
+			if($custom_version -is [Array]) {
+				Write-Debug "custom version detected"
+				$_ = $custom_version[0]
+				$v = $custom_version[1];
+			}
+			else { 
+				if($_ -eq "AssemblyInformationalVersion" -and $SemVer) {
+					Write-Debug "semver + supported semver attribute detected"
+					$v = $mr.Version
+				} else {
+					$v = $Version
+				}
+			}
+					
+			if($content -match $pattern) {
+				Write-Debug $("updating attribute {0} with {1}" -f $_,$v)
+				$content -replace $pattern, $('[assembly: {0}("{1}")]' -f $_, $v) | Set-Content -Path:$File					
+			} else {
+				Write-Debug $("adding new attribute {0} with {1}" -f $_,$v)
+				Add-Content $File $('[assembly: {0}("{1}")]' -f $_, $v)
+			}					
+		} -Begin {Write-Debug "Updating attributes:"}		
+	}
+	
+	end {
+		if($TeamCityMode) {
+			Write-Host "##teamcity[message text='Assembly Information Updated']"
+		}
+	}
+
+
+}
+
+function Get-ToolsVersion {
+	
+	begin {
+		Write-Verbose $("{0} [EXEC]" -f $MyInvocation.MyCommand)
+		Write-Debug $("MSBuild ToolsVersion={0}" -f $mr.MSBuild.ToolsVersion)
+	}
+	
+	process {
+				
+		$match = Get-ChildItem -Path $("HKLM:\Software\Microsoft\MSBuild\ToolsVersions\{0}" -f $mr.MSBuild.ToolsVersion) -ErrorAction:SilentlyContinue
+		if($match -eq $null) {
+			throw $("ToolsVersion {0} is missing. You may be able to resolve this by installing the appropriate .NET Framework version." -f $mr.MSBuild.ToolsVersion)
+		}
+		
+		return $mr.MSBuild.ToolsVersion
+	}
+	
+}
+
+function Get-MSBuild {
+	
+	begin {
+		Write-Verbose $("{0} [EXEC]" -f $MyInvocation.MyCommand)
+		
+		if([String]::IsNullOrWhiteSpace($mr.MSBuild.Version)) {
+			Write-Debug "MSBuild version has not been configured. The default value will be used."
+			$mr.MSBuild.Version = "4.5"
+		}
+		if([String]::IsNullOrWhiteSpace($mr.MSBuild.Bitness)) {
+			Write-Debug "MSBuild bitness has not been configured. The default value will be used."
+			$mr.MSBuild.Bitness = "x86"
+		}
+		Write-Debug $("MSBuild Version={0}" -f $mr.MSBuild.Version)	
+		Write-Debug $("Bitness={0}" -f $mr.MSBuild.Bitness)
+	}
+	
+	process {
+		
+		$key = $("DotNetFramework{0}_{1}_Path" -f $mr.MSBuild.Version, $mr.MSBuild.Bitness)	
+		$msbuild_path = Get-TeamCityParameter $key | Join-Path -ChildPath "msbuild.exe"
+		
+		Write-Debug $("MSBuild Path={0}" -f $msbuild_path)
+		if(Test-Path $msbuild_path -PathType:Leaf) {		
+			return $msbuild_path
+		}
+		
+		throw $("{0} doesn't exist" -f $msbuild_path)
+	}	
+	
+}
+
+function Get-BuildFile {
+	begin {
+		Write-Verbose $("{0} [EXEC]" -f $MyInvocation.MyCommand)
+		Write-Debug $("BuildFile Path={0}" -f $mr.BuildFile)
+	}
+	
+	process {
+	
+		if(Test-Path $mr.BuildFile -PathType:Leaf) {		
+			return $mr.BuildFile
+		}
+		
+		throw $("can't find '{0}'" -f $mr.BuildFile)
+	}
+}
+
+function Get-TeamCityParameter {
+	param(
+		[String]$Key
+	)	
+	begin {
+		Write-Verbose $("{0} [EXEC]" -f $MyInvocation.MyCommand)
+		Write-Debug $("Requested Parameter={0}" -f $Key)
+	}
+	
+	process {		
+		$v = $mr.MSBuild.Paths[$Key]		
+		return $v
+	}
+}
+
+function Invoke-Exit {
+	param(
+		[Int]$ExitCode
+	)
+	
+	[System.Environment]::Exit($ExitCode)
+}
+
+function Set-PSConsole {
+  try {
+        $max = $host.UI.RawUI.MaxPhysicalWindowSize
+        if($max) {
+        $host.UI.RawUI.BufferSize = New-Object System.Management.Automation.Host.Size(9999,9999)
+        $host.UI.RawUI.WindowSize = New-Object System.Management.Automation.Host.Size($max.Width,$max.Height)
+    }
+    } catch {}
+}
+
+function Resolve-TeamCityParameters {
+	begin {
+		Write-Verbose $("{0} [EXEC]" -f $MyInvocation.MyCommand)
+		$mr.MSBuild.Paths = @{}
+	}
+	
+	process {
+		$mr.MSBuild.Paths["DotNetFramework4.5_x64_Path"] = "%DotNetFramework4.5_x64_Path%"
+		$mr.MSBuild.Paths["DotNetFramework4.5_x86_Path"] = "%DotNetFramework4.5_x86_Path%"
+		$mr.MSBuild.Paths["DotNetFramework4.0_x64_Path"] = "%DotNetFramework4.0_x64_Path%"
+		$mr.MSBuild.Paths["DotNetFramework4.0_x86_Path"] = "%DotNetFramework4.0_x86_Path%"
+		$mr.MSBuild.Paths["DotNetFramework3.5_x64_Path"] = "%DotNetFramework3.5_x64_Path%"
+		$mr.MSBuild.Paths["DotNetFramework3.5_x86_Path"] = "%DotNetFramework3.5_x86_Path%"
+		$mr.MSBuild.Paths["DotNetFramework2.0_x64_Path"] = "%DotNetFramework2.0_x64_Path%"
+		$mr.MSBuild.Paths["DotNetFramework2.0_x86_Path"] = "%DotNetFramework2.0_x86_Path%"		
+	}
+}
+
+$mr = @{
+	MSBuild = @{
+		Version = "%mr.PSBuild.MSBuild.Version%"
+		Bitness = "%mr.PSBuild.MSBuild.Bitness%"
+		ToolsVersion = "%mr.PSBuild.MSBuild.ToolsVersion%"
+		Targets = "%mr.PSBuild.MSBuild.Targets%"
+		Configuration = "%mr.PSBuild.MSBuild.Configuration%"
+		Properties = "%mr.PSBuild.MSBuild.Properties%"
+		Arguments = "%mr.PSBuild.MSBuild.Arguments%"
+	}
+	BuildFile = "%mr.PSBuild.BuildFile%"
+	Version = "%mr.PSBuild.Version%"
+	AssemblyAttributesFormat = "%mr.PSBuild.AssemblyAttributesFormat%"
+	AssemblyInformationFileLocation = "%mr.PSBuild.AssemblyInformationFileLocation%"
+	WorkingDirectory = "%mr.PSBuild.WorkingDirectory%"
+}
+
+$VerbosePreference = "%mr.PSBuild.Verbose%"
+$DebugPreference = "%mr.PSBuild.Debug%"
+$TeamCityMode = if($env:TEAMCITY_VERSION) {$true} else {$false}
+
+if ($TeamCityMode) {
+    Set-PSConsole
+	  Resolve-TeamCityParameters
+}
+
+try {
+	Invoke-MSBuild -ea:Stop
+} catch {
+	Write-Error $_
+	Invoke-Exit 1
+}
+          ]]>
+          </param>
+        </parameters>
+      </runner>
+    </build-runners>
+    <requirements />
+  </settings>
+</meta-runner>
+
