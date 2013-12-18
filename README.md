@@ -14,7 +14,7 @@ Available Meta-Runners
 * Deploy War (deploys war file to servlet container)
 * Create Text File (creates text file with specified content)
 * Sonar Runner (Runner for Sonar)
-* PHP-related meta runners(see [documentation](https://github.com/JetBrains/meta-runner-power-pack/blob/master/php/documentation/documentation.md))
+* PHP-related meta runners(see [documentation](https://github.com/JetBrains/meta-runner-power-pack/tree/master/php))
 	* Run arbitrary PHP code
 	* Install a specific Composer dependency
 	* Install/update packages from composer.json
