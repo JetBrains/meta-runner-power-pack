@@ -14,7 +14,7 @@ Available Meta-Runners
 * Deploy War (deploys war file to servlet container)
 * Create Text File (creates text file with specified content)
 * Sonar Runner (Runner for Sonar)
-* PHP-related meta runners(see [documentation](https://github.com/JetBrains/meta-runner-power-pack/tree/master/php))
+* PHP-related meta runners (see [documentation](https://github.com/JetBrains/meta-runner-power-pack/tree/master/php))
 	* Run arbitrary PHP code
 	* Install a specific Composer dependency
 	* Install/update packages from composer.json
@@ -27,6 +27,7 @@ Available Meta-Runners
     * [NuGet install command](https://github.com/JetBrains/meta-runner-power-pack/tree/master/nuget)
     * [PSGet installer](https://github.com/JetBrains/meta-runner-power-pack/tree/master/psget)
     * [SemVer build number](https://github.com/JetBrains/meta-runner-power-pack/tree/master/semver-buildnumber)
+    * [Generate GitHub Release Notes](https://github.com/JetBrains/meta-runner-power-pack/tree/master/githubreleasenotes)
 
 
 Installation Instructions
