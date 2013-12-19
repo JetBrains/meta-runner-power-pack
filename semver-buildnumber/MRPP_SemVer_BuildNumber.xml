@@ -1,0 +1,159 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<meta-runner name="SemVer Build Number">
+  <description>Semantic Versioning (SemVer) build number runner(e.g. 1.0.3+78.4112e01).</description>
+  <settings>
+    <parameters>
+      <param name="mr.SemVer.ManualVersion" value="" spec="text description='Manual version. If included, it overrides any other method.' display='normal' label='Version:' validationMode='any'" />
+      <param name="mr.SemVer.NuSpecFilePath" value="" spec="text description='If included, version will be parsed from the nuspec file.' display='normal' label='NuSpec File:' validationMode='any'" />
+      <param name="mr.SemVer.RevisionType" value="n/a" spec="select data_1='n/a' data_2='SHA' data_3='STD' label_2='Git Style (Short Hash)' label_3='Standard (default)' description='The revision part from the VCS will be included as part of the SemVer build metadata. (e.g. short commit hash for Git, ChangeSet for TFS, etc.)' display='normal' label='Revision Type:'" />
+      <param name="mr.SemVer.IgnoreMetaData" value="$false" spec="checkbox checkedValue='$true' description='Skips the build metadata part (i.e. +X.X)' display='normal' label='Ignore Build Metadata:' uncheckedValue='$false'" />
+      <param name="mr.SemVer.Debug" value="SilentlyContinue" spec="checkbox checkedValue='Continue' description='Log debug messages?' display='normal' label='Debug:' uncheckedValue='SilentlyContinue'" />
+      <param name="mr.SemVer.Verbose" value="SilentlyContinue" spec="checkbox checkedValue='Continue' description='Log verbose messages?' display='normal' label='Verbose:' uncheckedValue='SilentlyContinue'" />
+    </parameters>
+    <build-runners>
+      <runner name="SemVer" type="jetbrains_powershell">
+        <parameters>
+          <param name="jetbrains_powershell_execution" value="PS1" />
+          <param name="jetbrains_powershell_noprofile" value="true" />
+          <param name="jetbrains_powershell_errorToError" value="error" />
+          <param name="jetbrains_powershell_script_mode" value="CODE" />
+          <param name="jetbrains_powershell_bitness" value="x86" />
+          <param name="jetbrains_powershell_minVersion" value="3.0" />
+          <param name="teamcity.step.mode" value="default" />
+          <param name="jetbrains_powershell_script_code">
+            <![CDATA[
+function Update-BuildNumber {
+	param(
+		[Parameter(ValueFromPipeline=$true)]
+		[String]$BuildNumber
+	)
+	Write-Verbose $("Starting: '{0}'" -f $MyInvocation.MyCommand)
+	Write-Debug $("Build Number: {0}" -f $BuildNumber)
+	
+	Write-Host "##teamcity[buildNumber '$BuildNumber']"
+}
+
+function Get-NuSpecVersion {
+	[CmdletBinding()]
+	param()
+	
+	Write-Verbose $("Starting: '{0}'" -f $MyInvocation.MyCommand)
+	Write-Debug $("NuSpec File: {0}" -f $mr.NuSpecFilePath)
+	
+	$nuspec_file = $(Get-Content $mr.NuSpecFilePath -ErrorAction:SilentlyContinue) -as [Xml]
+	if($nuspec_file)
+	{
+		$version = $nuspec_file.package.metadata.version -as [System.Version]
+		if($version) {
+			return $version
+		} else {
+			Write-Error "The NuSpec file contains no valid version information"
+		}		
+	} else {
+		Write-Error $("NuSpec file path invalid or it wasn't a valid nuspec file.")
+	}
+}
+
+function Get-BuildMetaData {
+	Write-Verbose $("Starting: '{0}'" -f $MyInvocation.MyCommand)
+	Write-Debug $("Revision Type: {0}" -f $mr.RevisionType)
+	Write-Debug $("Build Counter: {0}" -f $mr.BuildCounter)
+	
+	switch ($mr.RevisionType) {
+		"SHA" {
+			Write-Debug $("VCS Build Number: {0}" -f $mr.BuildVCSNumber)
+			$short_hash = $mr.BuildVCSNumber.SubString(0,7)
+			Write-Debug $("ShortHash: {0}" -f $short_hash)
+		
+			return $("{0}.{1}" -f $mr.BuildCounter, $short_hash)
+		}
+		"STD" {
+			Write-Debug $("VCS Build Number: {0}" -f $mr.BuildVCSNumber)
+			return $("{0}.{1}" -f $mr.BuildCounter, $mr.BuildVCSNumber)
+		}
+		default {return $mr.BuildCounter} #same as n/a
+	}
+	
+}
+
+function Invoke-Exit {
+	param(
+		[Int]$ExitCode
+	)
+	
+	[System.Environment]::Exit($ExitCode)
+}
+
+function Get-SemVer {
+	[CmdletBinding()]
+	param()
+	
+	Write-Verbose $("Starting: '{0}'" -f $MyInvocation.MyCommand)
+	
+	$version = $mr.ManualVersion
+	
+	if($mr.NuSpecFilePath -and [String]::IsNullOrWhiteSpace($version)) {
+		$version = Get-NuSpecVersion -ea:Stop		
+	}
+	
+	if([String]::IsNullOrWhiteSpace($version)) {
+		Write-Error "SemVer creation failed. Found no valid version."
+		return
+	}
+	
+	Write-Debug $("Version: {0}" -f $version)
+	
+	$mr.IgnoreBuildMetaData = [Bool]::Parse($mr.IgnoreBuildMetaData)
+	Write-Debug $("Ignore MetaData: {0}" -f $mr.IgnoreBuildMetaData)
+	
+	if($mr.IgnoreBuildMetaData) {
+		return $version
+	}
+	
+	$build_metadata = Get-BuildMetaData	
+	Write-Debug $("Build MetaData: {0}" -f $build_metadata)
+	
+	return $("{0}+{1}" -f $version, $build_metadata) 
+}
+
+function Set-PSConsole {
+  try {
+        $max = $host.UI.RawUI.MaxPhysicalWindowSize
+        if($max) {
+        $host.UI.RawUI.BufferSize = New-Object System.Management.Automation.Host.Size(9999,9999)
+        $host.UI.RawUI.WindowSize = New-Object System.Management.Automation.Host.Size($max.Width,$max.Height)
+    }
+    } catch {}
+}
+
+$mr = @{
+	NuSpecFilePath = "%mr.SemVer.NuSpecFilePath%"
+	BuildCounter = "%build.counter%"
+	BuildVCSNumber = "%build.vcs.number%"
+	ManualVersion = "%mr.SemVer.ManualVersion%"
+	RevisionType = "%mr.SemVer.RevisionType%"
+	IgnoreBuildMetaData = "%mr.SemVer.IgnoreMetaData%"
+}
+
+$VerbosePreference = "%mr.SemVer.Verbose%"
+$DebugPreference = "%mr.SemVer.Debug%"
+
+if ($env:TEAMCITY_VERSION) {
+    Set-PSConsole
+}
+
+try {
+	Get-SemVer -ea:Stop | Update-BuildNumber
+} catch {
+	Write-Error $_
+	Invoke-Exit 1
+}
+			]]>
+          </param>
+        </parameters>
+      </runner>
+    </build-runners>
+    <requirements />
+  </settings>
+</meta-runner>
+

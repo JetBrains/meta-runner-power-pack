@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<meta-runner name="PSGet:: Installer">
+  <description>Install PS modules via PSGet</description>
+  <settings>
+    <parameters>
+      <param name="mr.PSGet.Module" value="" spec="text description='The name of the module.' display='normal' label='Module:' validationMode='not_empty'" />
+      <param name="mr.PSGet.Global" value="$true" spec="checkbox checkedValue='$true' description='Installs using PSGet machine/global location' display='normal' label='Global:' uncheckedValue='$false'" />
+      <param name="mr.PSGet.UseNuGet" value="$false" spec="checkbox checkedValue='$true' description='Install from NuGet' display='normal' label='Use NuGet:' uncheckedValue='$false'" />
+      <param name="mr.PSGet.Log" value="$false" spec="checkbox checkedValue='$true' description='Determines whether or not messages other than warnings or errors are written to the log.' display='normal' label='Log Messages:' uncheckedValue='$false'" />
+      <param name="mr.PSGet.Options" value="" spec="text display='normal' label='Options:' description='Any optional arguments to include. [param1=value param2=value]' validationMode='any'" />
+    </parameters>
+    <build-runners>
+      <runner name="PSGet" type="jetbrains_powershell">
+        <parameters>
+          <param name="jetbrains_powershell_execution" value="PS1" />
+          <param name="jetbrains_powershell_noprofile" value="true" />
+          <param name="jetbrains_powershell_errorToError" value="error" />
+          <param name="jetbrains_powershell_script_mode" value="CODE" />
+          <param name="jetbrains_powershell_bitness" value="x86" />
+          <param name="teamcity.step.mode" value="default" />
+          <param name="jetbrains_powershell_script_code"><![CDATA[
+$PsGetDestinationModulePath = Join-Path "%env.CommonProgramW6432%" "Modules"
+$_ErrorActionPreference = $ErrorActionPreference
+$ErrorActionPreference = "SilentlyContinue"
+
+$(New-Object Net.WebClient).DownloadString("http://psget.net/GetPsGet.ps1") | iex -wa:SilentlyContinue
+
+$ErrorActionPreference = $_ErrorActionPreference
+
+function Build-Arguments {
+  $arguments = @{}
+
+  if(%mr.PSGet.UseNuGet%) {
+    $arguments.NuGetPackageId = "%mr.PSGet.Module%"
+  } else {
+    $arguments.Module = "%mr.PSGet.Module%"
+  }
+
+  $arguments.Global = %mr.PSGet.Global%
+
+  # PackageVersion=2.3.1 NugetSource=http://example.com
+  if([String]::IsNullOrWhiteSpace("%mr.PSGet.Options%") -eq $false) {
+  $("%mr.PSGet.Options%" -split ' ') | Foreach-Object {
+    $argument = $($_ -split '=')
+    
+    if($argument -is [Array]) {
+      $key = $($argument[0])
+      $value = $($argument[1])
+
+      $arguments.$key = $value
+    } else {
+      # flag argument
+      $arguments.$argument = $true
+    }
+  }
+  }
+
+  return $arguments
+}
+
+$arguments = Build-Arguments
+
+if(%mr.PSGet.Log%) {
+  Write-Host "Installing module: %mr.PSGet.Module%"
+  Write-Host "using arguments: " -NoNewline
+
+  $arguments.Keys | Foreach-Object {
+    Write-Host $("{0}={1} " -f $_, $arguments.$_) -NoNewline
+  } -End {Write-Host ""}
+}
+
+Install-Module @arguments -ErrorAction:Stop
+          ]]></param>
+        </parameters>
+      </runner>
+    </build-runners>
+    <requirements />
+  </settings>
+</meta-runner>
+

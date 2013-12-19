@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<meta-runner name="NuGet::  Install">
+  <description>Install packages via NuGet.exe</description>
+  <settings>
+    <parameters>
+      <param name="mr.NuGetInstall.Package" value="" spec="text description='Package id or packages.config file path' display='normal' label='Package:' validationMode='not_empty'" />
+      <param name="mr.NuGetInstall.Version" value="" spec="text description='The version of the package to install. Default is the latest one.' display='normal' label='Version:' validationMode='any'" />
+      <param name="mr.NuGetInstall.OutputDirectory" value="" spec="text description='Specifies the directory in which packages will be installed. If none specified, uses the checkout directory.' display='normal' label='Output Directory:' validationMode='any'" />
+      <param name="mr.NuGetInstall.Log" value="$false" spec="checkbox checkedValue='$true' description='Determines whether or not messages other than warnings or errors are written to the log.' display='normal' label='Log Messages:' uncheckedValue='$false'" />
+      <param name="mr.NuGetInstall.Options" value="" spec="text display='normal' label='Options:' description='Any optional arguments to include.' validationMode='any'" />
+    </parameters>
+    <build-runners>
+      <runner name="" type="jetbrains_powershell">
+        <parameters>
+          <param name="jetbrains_powershell_execution" value="PS1" />
+          <param name="jetbrains_powershell_noprofile" value="true" />
+          <param name="jetbrains_powershell_errorToError" value="error" />
+          <param name="jetbrains_powershell_script_mode" value="CODE" />
+          <param name="jetbrains_powershell_bitness" value="x86" />
+          <param name="teamcity.step.mode" value="default" />
+          <param name="jetbrains_powershell_script_code"><![CDATA[
+function Build-Arguments {
+  $parameters = @()
+
+  $parameters += "install"
+  $parameters += "%mr.NuGetInstall.Package%"
+
+  if([String]::IsNullOrWhiteSpace("%mr.NuGetInstall.Version%") -eq $false) {
+    $parameters += "-Version"
+    $parameters += "%mr.NuGetInstall.Version%"
+  }
+  
+  if([String]::IsNullOrWhiteSpace("%mr.NuGetInstall.OutputDirectory%") -eq $false) {
+    $parameters += "-OutputDirectory"
+    $parameters += "%mr.NuGetInstall.OutputDirectory%"
+  }
+  
+  if([String]::IsNullOrWhiteSpace("%mr.NuGetInstall.Options%") -eq $false) {
+  $("%mr.NuGetInstall.Options%" -split ' ') | Foreach-Object {
+    $parameters += $_
+  }
+  }
+
+  return $parameters
+}
+
+$nuget = Join-Path -Path '%teamcity.tool.NuGet.CommandLine.DEFAULT.nupkg%' -ChildPath 'tools\NuGet.exe'
+$arguments = Build-Arguments
+
+if(%mr.NuGetInstall.Log%) {
+  Write-Host "Executing nuget.exe"
+  Write-Host "source: $nuget"
+  Write-Host "using arguments: " -NoNewline
+
+  $arguments | Foreach-Object {
+    Write-Host "$_ " -NoNewline
+  } -End {Write-Host ""}
+}
+
+& $nuget $arguments | Out-String
+          ]]></param>
+        </parameters>
+      </runner>
+    </build-runners>
+    <requirements />
+  </settings>
+</meta-runner>
+
