@@ -13,6 +13,7 @@ Available Meta-Runners
 * Add Tags to Build (adds tags to currently running build in TeamCity)
 * Deploy War (deploys war file to servlet container)
 * Create Text File (creates text file with specified content)
+* Build Status Text (sets custom build status text to the build)
 * Sonar Runner (Runner for Sonar)
 * PHP-related meta runners(see [documentation](https://github.com/JetBrains/meta-runner-power-pack/blob/master/php/documentation/documentation.md))
 	* Run arbitrary PHP code

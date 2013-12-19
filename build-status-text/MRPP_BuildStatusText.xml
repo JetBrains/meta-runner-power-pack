@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<meta-runner name="Build Status Text">
+  <description>Sets custom build status text</description>
+  <settings>
+    <parameters>
+      <param name="system.statusText" value="{build.status.text}" spec="text description='New build status text. To include original build status text add  placeholder {build.status.text} to the text.' display='normal' label='Build status text:' validationMode='not_empty'" />
+    </parameters>
+    <build-runners>
+      <runner name="" type="Ant">
+        <parameters>
+          <param name="build-file"><![CDATA[<project name="buildStatusText">
+
+<target name="changeStatus">
+
+<echo message="##teamcity[buildStatus text='${statusText}']"/>
+
+</target>
+
+</project>]]></param>
+          <param name="build-file-path" value="build.xml" />
+          <param name="target" value="changeStatus" />
+          <param name="teamcity.coverage.emma.include.source" value="true" />
+          <param name="teamcity.coverage.emma.instr.parameters" value="-ix -*Test*" />
+          <param name="teamcity.coverage.idea.includePatterns" value="*" />
+          <param name="teamcity.coverage.jacoco.patterns" value="+:*" />
+          <param name="teamcity.step.mode" value="default" />
+          <param name="use-custom-build-file" value="true" />
+        </parameters>
+      </runner>
+    </build-runners>
+    <requirements />
+  </settings>
+</meta-runner>
+
