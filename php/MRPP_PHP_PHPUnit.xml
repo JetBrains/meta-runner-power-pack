@@ -32,9 +32,10 @@
 <property name="phpunit.runtime.exec" value="${phpunit.runtime}"/>
 <property name="phpunit.junit.log" value="${teamcity.build.tempDir}/phpunit-log.xml"/>
 
+<property name="phpunit.coverage.clover" value="${teamcity.build.tempDir}/clover.xml"/>
 <property name="phpunit.coverage.dir" value="${teamcity.build.workingDir}/tccoverage"/>
 <property name="phpunit.coverage.zip" value="${teamcity.build.workingDir}/coverage.zip"/>
-<condition property="phpunit.coverage.param" value="--coverage-html ${phpunit.coverage.dir}">
+<condition property="phpunit.coverage.param" value="--coverage-clover ${phpunit.coverage.clover} --coverage-html ${phpunit.coverage.dir}">
   <istrue value="${phpunit.coverage.set}"/>
 </condition>
 
