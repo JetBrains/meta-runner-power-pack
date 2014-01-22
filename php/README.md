@@ -14,12 +14,12 @@ Before being able to use these runners, the following prerequisites should be sa
 
 Most runners will report back their output in the TeamCity build log. The following is the output of the _PHP_ runner:
 
-![PHP runner output in build log](assets/php-runner-output.png)
+![PHP runner output in build log](documentation/assets/php-runner-output.png)
 
 ## PHP Runner
 The _PHP_ runner allows running arbitrary PHP code. 
 
-![PHP runner](assets/php-runner.png)
+![PHP runner](documentation/assets/php-runner.png)
 
 The following options can be specified:
 
@@ -32,7 +32,7 @@ The _Install Composer package runner_ allows installing a given Composer depende
 
 This build step will automatically download _composer.phar_ from the [GetComposer.org](http://www.GetComposer.org) website during build.
 
-![Install Composer package runner](assets/composer-runner.png)
+![Install Composer package runner](documentation/assets/composer-runner.png)
 
 The following options can be specified:
 
@@ -46,7 +46,7 @@ The _Run Composer_ runner allows installing or updating Composer dependencies du
 
 This build step will automatically download _composer.phar_ from the [GetComposer.org](http://www.GetComposer.org) website during build.
 
-![Run Composer runner](assets/run-composer-runner.png)
+![Run Composer runner](documentation/assets/run-composer-runner.png)
 
 The following options can be specified:
 
@@ -59,7 +59,7 @@ The _Phing_ runner allows running a Phing script during the build.
 
 This build step will use a Phing executable available on the build agent if specified, or automatically download the latest _phing-latest.phar_ from the [Phing.info](http://www.phing.info) website during build.
 
-![Phing runner](assets/phing-runner.png)
+![Phing runner](documentation/assets/phing-runner.png)
 
 The following options can be specified:
 
@@ -74,7 +74,7 @@ The _PHPUnit_ runner allows running PHPUnit tests during the build and will opti
 
 This build step will use a PHPUnit executable available on the build agent if specified, or automatically download the latest _phpunit.phar_ from the [PHPUnit.de](http://www.phpunit.de) website during build.
 
-![PHPUnit runner](assets/phpunit-runner.png)
+![PHPUnit runner](documentation/assets/phpunit-runner.png)
 
 The following options can be specified:
 
@@ -86,8 +86,8 @@ The following options can be specified:
 
 The _PHPUnit_ runner will report unit test results to the TeamCity server:
 
-![PHPUnit runner - test results](assets/phpunit-testresults.png)
+![PHPUnit runner - test results](documentation/assets/phpunit-testresults.png)
 
 When the **Collect code coverage** option is enabled, the _PHPUnit_ runner will publish a code coverage report to the TeamCity server:
 
-![PHPUnit runner - code coverage](assets/phpunit-coverage.png)
+![PHPUnit runner - code coverage](documentation/assets/phpunit-coverage.png)
