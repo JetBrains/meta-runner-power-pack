@@ -37,6 +37,9 @@
 <condition property="phpunit.coverage.param" value="--coverage-html ${phpunit.coverage.dir}">
   <istrue value="${phpunit.coverage.set}"/>
 </condition>
+<condition property="phpunit.coverage.param" value="">
+  <isfalse value="${phpunit.coverage.set}"/>
+</condition>
 
 <target name="runTests" depends="getPhpUnit,runPhpUnitPhar,runPhpUnitRuntime">
 </target>
