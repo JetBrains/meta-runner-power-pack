@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<meta-runner name="MRPP_VSTest">
+  <description>Runs tests with vstest.console</description>
+  <settings>
+    <parameters>
+      <param name="mr.VSTest.executable" value="" spec="text description='Path to vstest.console executable' display='normal' label='Path to VSTest:' validationMode='not_empty'" />
+      <param name="mr.VSTest.assemblies" value="" spec="text description='Space or newline separated paths to assemblies containing tests' display='normal' label='Assemblies with tests:' validationMode='not_empty'" />
+      <param name="mr.VSTest.cmdline" value="" spec="text description='Additional command line arguments for vstest.console.exe' display='normal' label='Extra command line:' validationMode='any'" />
+      <param name="mr.VSTest.coverage.rules" value="" spec="text description='Coverage rules for dotCover' display='normal' label='Coverage rules:' validationMode='any'" />      
+    </parameters>
+    <build-runners>
+      <runner name="" type="jetbrains.dotNetGenericRunner">
+        <parameters>
+          <param name="dotNetCoverage.NCover.HTMLReport.File.Sort" value="0" />
+          <param name="dotNetCoverage.NCover.HTMLReport.File.Type" value="1" />
+          <param name="dotNetCoverage.NCover.Reg" value="selected" />
+          <param name="dotNetCoverage.NCover.platformBitness" value="x86" />
+          <param name="dotNetCoverage.NCover.platformVersion" value="v2.0" />
+          <param name="dotNetCoverage.NCover3.Reg" value="selected" />
+          <param name="dotNetCoverage.NCover3.args" value="//ias .*" />
+          <param name="dotNetCoverage.NCover3.platformBitness" value="x86" />
+          <param name="dotNetCoverage.NCover3.platformVersion" value="v2.0" />
+          <param name="dotNetCoverage.NCover3.reporter.executable.args" value="//or FullCoverageReport:Html:{teamcity.report.path}" />
+          <param name="dotNetCoverage.PartCover.Reg" value="selected" />
+          <param name="dotNetCoverage.PartCover.includes" value="[*]*" />
+          <param name="dotNetCoverage.PartCover.platformBitness" value="x86" />
+          <param name="dotNetCoverage.PartCover.platformVersion" value="v2.0" />
+          <param name="dotNetCoverage.dotCover.filters" value="%mr.VSTest.coverage.rules%" />
+          <param name="dotNetCoverage.tool" value="dotcover" />
+          <param name="dotNetTestRunner.Type" value="GenericProcess" />
+          <param name="proc_additional_commandline"><![CDATA[%mr.VSTest.assemblies%
+%mr.VSTest.cmdline%
+/logger:trx]]></param>
+          <param name="proc_bit" value="x86" />
+          <param name="proc_path" value="%mr.VSTest.executable%" />
+          <param name="proc_runtime_version" value="v4.0" />
+          <param name="teamcity.step.mode" value="default" />
+        </parameters>
+      </runner>
+    </build-runners>
+    <requirements />
+  </settings>
+</meta-runner>
+
