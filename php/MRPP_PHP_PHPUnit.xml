@@ -32,43 +32,51 @@
 <property name="phpunit.runtime.exec" value="${phpunit.runtime}"/>
 <property name="phpunit.junit.log" value="${teamcity.build.tempDir}/phpunit-log.xml"/>
 
+<property name="phpunit.coverage.clover" value="${teamcity.build.tempDir}/clover.xml"/>
 <property name="phpunit.coverage.dir" value="${teamcity.build.workingDir}/tccoverage"/>
 <property name="phpunit.coverage.zip" value="${teamcity.build.workingDir}/coverage.zip"/>
-<condition property="phpunit.coverage.param" value="--coverage-html ${phpunit.coverage.dir}">
+<condition property="phpunit.coverage.param" value="--coverage-clover ${phpunit.coverage.clover} --coverage-html ${phpunit.coverage.dir}">
   <istrue value="${phpunit.coverage.set}"/>
 </condition>
+<condition property="phpunit.coverage.param" value="">
+  <isfalse value="${phpunit.coverage.set}"/>
+</condition>
 
-<target name="runTests" depends="getPhpUnit,runPhpUnitPhar,runPhpUnitRuntime">
+<property name="phpunit.result.error" value="false" />
+
+<target name="runTests" depends="getPhpUnit,runPhpUnitPhar,runPhpUnitRuntime,collectCoverage">
+  <fail message="Unit test error." if="phpunit.result.error" />
+</target>
+
+<target name="collectCoverage" depends="runPhpUnitPhar,runPhpUnitRuntime" if="${phpunit.coverage.set}">
+  <zip destfile="${phpunit.coverage.zip}" basedir="${phpunit.coverage.dir}" />
+  <echo>##teamcity[publishArtifacts '${phpunit.coverage.zip}']</echo>
 </target>
 
 <target name="runPhpUnitPhar" depends="getPhpUnit" unless="phpunit.runtime.set">
   <exec executable="php" dir="${php.workingDir}" failonerror="false" resultproperty="phpunit.result">
     <arg line="-f &quot;${phpunit.runtime.exec}&quot; -d display_errors=On -- -c &quot;${phpunit.configuration}&quot; --log-junit ${phpunit.junit.log} ${phpunit.coverage.param} ${phpunit.params}"/>
   </exec>  
-  <zip destfile="${phpunit.coverage.zip}" basedir="${phpunit.coverage.dir}" />
-  <echo>##teamcity[publishArtifacts '${phpunit.coverage.zip}']</echo>
+
   <echo>##teamcity[importData type='junit' path='${phpunit.junit.log}']</echo>
   <condition property="phpunit.result.error">
     <not>
       <equals arg1="0" arg2="${phpunit.result}"/>
     </not>
   </condition>
-  <fail message="Unit test error." if="phpunit.result.error" />
 </target>
 
 <target name="runPhpUnitRuntime" depends="getPhpUnit" if="phpunit.runtime.set">
   <exec executable="${phpunit.runtime}" dir="${php.workingDir}" failonerror="false" resultproperty="phpunit.result">
     <arg line="-c &quot;${phpunit.configuration}&quot; --log-junit ${phpunit.junit.log} ${phpunit.coverage.param} ${phpunit.params}"/>
   </exec>
-  <zip destfile="${phpunit.coverage.zip}" basedir="${phpunit.coverage.dir}" />
-  <echo>##teamcity[publishArtifacts '${phpunit.coverage.zip}']</echo>
+
   <echo>##teamcity[importData type='junit' path='${phpunit.junit.log}']</echo>
   <condition property="phpunit.result.error">
     <not>
       <equals arg1="0" arg2="${phpunit.result}"/>
     </not>
   </condition>
-  <fail message="Unit test error." if="phpunit.result.error" />
 </target>
 
 <target name="getPhpUnit" unless="phpunit.runtime.set">
@@ -89,4 +97,3 @@
     <requirements />
   </settings>
 </meta-runner>
-
