@@ -45,7 +45,7 @@
 <property name="phpunit.result.error" value="false" />
 
 <target name="runTests" depends="getPhpUnit,runPhpUnitPhar,runPhpUnitRuntime,collectCoverage">
-  <fail message="Unit test error." if="phpunit.result.error" />
+  <fail message="Unit test error." if="${phpunit.result.error}" />
 </target>
 
 <target name="collectCoverage" depends="runPhpUnitPhar,runPhpUnitRuntime" if="${phpunit.coverage.set}">
