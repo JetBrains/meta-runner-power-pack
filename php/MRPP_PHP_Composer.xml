@@ -22,7 +22,7 @@
 
 <target name="runComposer" depends="getComposer">
   <exec executable="php" failonerror="true">
-    <arg line="-f &quot;${composer.dest.dir}/composer.phar&quot; -d &quot;${composer.dest.dir}&quot; ${composer.params} ${composer.command}"/>
+    <arg line="-f &quot;${composer.dest.dir}/composer.phar&quot; ${composer.command} -d &quot;${composer.dest.dir}&quot; ${composer.params}"/>
   </exec>
 </target>
 
