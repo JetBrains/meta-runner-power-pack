@@ -23,7 +23,7 @@
   <matches pattern="true" string="${clean.dest.dir}"/>
 </condition>
 
-<target name="getFile" depends="clean-dest-dir, create-dest-dir">
+<target name="getFile" depends="create-dest-dir, clean-dest-dir">
 
 <get src="${url}" dest="${dest.dir}"
      username="${username}" 
@@ -37,7 +37,9 @@
 </target>
 
 <target name="clean-dest-dir" if="clean.dest.dir.set">
-<delete dir="${dest.dir}"/>
+  <delete includeemptydirs="true">
+    <fileset dir="${dest.dir}" includes="**/*"/>
+  </delete>
 </target>
 
 
