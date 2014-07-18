@@ -103,8 +103,16 @@ function Build-Arguments() {
 
 try {
 
-    $chocolateyDir = Join-Path $env:SYSTEMDRIVE Chocolatey
-    if (-not (Test-Path $chocolateyDir)) {
+    $chocolateyDir = $null
+    if ($env:ChocolateyInstall -ne $null) {
+        $chocolateyDir = $env:ChocolateyInstall
+    } elseif (Test-Path (Join-Path $env:SYSTEMDRIVE Chocolatey)) {
+        $chocolateyDir = Join-Path $env:SYSTEMDRIVE Chocolatey
+    } elseif (Test-Path (Join-Path ([Environment]::GetFolderPath("CommonApplicationData")) Chocolatey)) {
+        $chocolateyDir = Join-Path ([Environment]::GetFolderPath("CommonApplicationData")) Chocolatey
+    }
+    
+    if ($chocolateyDir -eq $null) {
         Write-Host "##teamcity[progressMessage 'Chocolatey not installed; installing Chocolatey']"
         iex ((new-object net.webclient).DownloadString('https://chocolatey.org/install.ps1'))
         if (-not (Test-Path $chocolateyDir)) {
@@ -117,9 +125,12 @@ try {
     $chocolateyBinDir = Join-Path $chocolateyDir "bin"
     $gitversion = Join-Path $chocolateyBinDir "gitversion.bat"
     if (-not (Test-Path $gitversion)) {
+        $gitversion = Join-Path $chocolateyBinDir "gitversion.exe"
+    }
+    if (-not (Test-Path $gitversion)) {
         Write-Host "##teamcity[progressMessage 'GitVersion not installed; installing GitVersion']"
-        $cinst = Join-Path $chocolateyBinDir "cinst.bat"
-        iex "$cinst gitversion"
+        $choco = Join-Path (Join-Path $chocolateyDir "chocolateyInstall") "chocolatey.cmd"
+        iex "$choco install gitversion"
         if ($LASTEXITCODE -ne 0) {
             throw "Error installing GitVersion"
         }
