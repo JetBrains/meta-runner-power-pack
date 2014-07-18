@@ -86,6 +86,7 @@ try {
     if ($chocolateyDir -eq $null) {
         Write-Host "##teamcity[progressMessage 'Chocolatey not installed; installing Chocolatey']"
         iex ((new-object net.webclient).DownloadString('https://chocolatey.org/install.ps1'))
+        $chocolateyDir = Join-Path ([Environment]::GetFolderPath("CommonApplicationData")) Chocolatey
         if (-not (Test-Path $chocolateyDir)) {
             throw "Error installing Chocolatey"
         }
