@@ -47,12 +47,10 @@ function Build-Arguments() {
     if (Test-IsSpecified $workingDir) {
         $args = """$workingDir"""
     }
-    if (Test-IsSpecified $url) {
-        $args = Append-IfSpecified $args "url" $url
-        $args = Append-IfSpecified $args "b" $branch
-        $args = Append-IfSpecified $args "u" $username
-        $args = Append-IfSpecified $args "p" $password
-    }
+    $args = Append-IfSpecified $args "url" $url
+    $args = Append-IfSpecified $args "b" $branch
+    $args = Append-IfSpecified $args "u" $username
+    $args = Append-IfSpecified $args "p" $password
     $args = Append-IfSpecified $args "output" $output
     $args = Append-IfSpecified $args "l" $logFile
     if (Test-IsSpecified $exec) {
