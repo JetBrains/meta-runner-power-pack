@@ -1,18 +1,18 @@
 ﻿[CmdletBinding()]
 Param (
     [string] $workingDir = (Join-Path "%teamcity.build.workingDir%" "%mr.GitVersion.gitCheckoutDir%"),
-    [string] $output = "%mr.GitVersion.output%",
-    [string] $outputFile = "%mr.GitVersion.outputFile%",
-    [string] $url = "%mr.GitVersion.url%",
-    [string] $branch = "%mr.GitVersion.branch%",
-    [string] $username = "%mr.GitVersion.username%",
-    [string] $password = "%mr.GitVersion.password%",
-    [string] $logFile = "%mr.GitVersion.logFile%",
-    [string] $exec = "%mr.GitVersion.exec%",
-    [string] $execArgs = "%mr.GitVersion.execArgs%",
-    [string] $proj = "%mr.GitVersion.proj%",
-    [string] $projArgs = "%mr.GitVersion.projArgs%",
-    [string] $updateAssemblyInfo = "%mr.GitVersion.updateAssemblyInfo%"
+    [string] $output = '%mr.GitVersion.output%',
+    [string] $outputFile = '%mr.GitVersion.outputFile%',
+    [string] $url = '%mr.GitVersion.url%',
+    [string] $branch = '%mr.GitVersion.branch%',
+    [string] $username = '%mr.GitVersion.username%',
+    [string] $password = '%mr.GitVersion.password%',
+    [string] $logFile = '%mr.GitVersion.logFile%',
+    [string] $exec = '%mr.GitVersion.exec%',
+    [string] $execArgs = '%mr.GitVersion.execArgs%',
+    [string] $proj = '%mr.GitVersion.proj%',
+    [string] $projArgs = '%mr.GitVersion.projArgs%',
+    [string] $updateAssemblyInfo = '%mr.GitVersion.updateAssemblyInfo%'
 )
 
 $ErrorActionPreference = "Stop"
@@ -37,7 +37,7 @@ function Test-IsSpecified ($value) {
 
 function Append-IfSpecified($appendTo, $command, $value) {
     if (Test-IsSpecified $value) {
-        return "$appendTo /$command ""$value"""
+        return "$appendTo /$command '$value'"
     }
     return $appendTo
 }
@@ -47,12 +47,10 @@ function Build-Arguments() {
     if (Test-IsSpecified $workingDir) {
         $args = """$workingDir"""
     }
-    if (Test-IsSpecified $url) {
-        $args = Append-IfSpecified $args "url" $url
-        $args = Append-IfSpecified $args "b" $branch
-        $args = Append-IfSpecified $args "u" $username
-        $args = Append-IfSpecified $args "p" $password
-    }
+    $args = Append-IfSpecified $args "url" $url
+    $args = Append-IfSpecified $args "b" $branch
+    $args = Append-IfSpecified $args "u" $username
+    $args = Append-IfSpecified $args "p" $password
     $args = Append-IfSpecified $args "output" $output
     $args = Append-IfSpecified $args "l" $logFile
     if (Test-IsSpecified $exec) {
@@ -102,7 +100,7 @@ try {
     if (-not (Test-Path $gitversion)) {
         Write-Host "##teamcity[progressMessage 'GitVersion not installed; installing GitVersion']"
         $choco = Join-Path (Join-Path $chocolateyDir "chocolateyInstall") "chocolatey.cmd"
-        iex "$choco install gitversion"
+        iex "$choco install gitversion.portable"
         if ($LASTEXITCODE -ne 0) {
             throw "Error installing GitVersion"
         }
@@ -116,7 +114,8 @@ try {
     $proj = Join-ToWorkingDirectoryIfSpecified $proj
 
     $arguments = Build-Arguments
-    Write-Host "##teamcity[progressMessage 'Running: $gitversion $arguments']"
+    $safeArgs = $arguments.Replace($password, "*****").Replace("'", """")
+    Write-Host "##teamcity[progressMessage 'Running: $gitversion $safeArgs']"
     iex "$gitversion $arguments"
     if ($LASTEXITCODE -ne 0) {
         throw "Error running GitVersion"
