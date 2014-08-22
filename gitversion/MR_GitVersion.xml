@@ -74,6 +74,7 @@ function Append-IfSpecified($appendTo, $command, $value) {
 function Build-Arguments() {
     $args = "";
     if (Test-IsSpecified $workingDir) {
+        $workingDir = $workingDir.TrimEnd('\')
         $args = """$workingDir"""
     }
     $args = Append-IfSpecified $args "url" $url
@@ -91,7 +92,7 @@ function Build-Arguments() {
         $args = Append-IfSpecified $args "projargs" $projargs
     }
     if ($updateAssemblyInfo -eq "true") {
-        $args = "$args /UpdateAssemblyInfo"
+        $args = "$args /UpdateAssemblyInfo true"
     }
     if ($output -eq "json" -and (Test-IsSpecified $outputFile)) {
         $args = "$args > ""$outputFile"""
@@ -143,7 +144,13 @@ try {
     $proj = Join-ToWorkingDirectoryIfSpecified $proj
 
     $arguments = Build-Arguments
-    $safeArgs = $arguments.Replace($password, "*****").Replace("'", """")
+    
+    $safeArgs = $arguments.Replace("'", """")
+    
+    if($password) {
+      $safeArgs = $arguments.Replace($password, "*****")
+    }
+    
     Write-Host "##teamcity[progressMessage 'Running: $gitversion $safeArgs']"
     iex "$gitversion $arguments"
     if ($LASTEXITCODE -ne 0) {
