@@ -12,7 +12,8 @@ Param (
     [string] $execArgs = '%mr.GitVersion.execArgs%',
     [string] $proj = '%mr.GitVersion.proj%',
     [string] $projArgs = '%mr.GitVersion.projArgs%',
-    [string] $updateAssemblyInfo = '%mr.GitVersion.updateAssemblyInfo%'
+    [string] $updateAssemblyInfo = '%mr.GitVersion.updateAssemblyInfo%',
+    [string] $updateGitVersion = '%mr.GitVersion.updateGitVersion%'
 )
 
 $ErrorActionPreference = "Stop"
@@ -97,9 +98,11 @@ try {
     if (-not (Test-Path $gitversion)) {
         $gitversion = Join-Path $chocolateyBinDir "gitversion.exe"
     }
+	
+    $choco = Join-Path (Join-Path $chocolateyDir "chocolateyInstall") "chocolatey.cmd"
+	
     if (-not (Test-Path $gitversion)) {
         Write-Host "##teamcity[progressMessage 'GitVersion not installed; installing GitVersion']"
-        $choco = Join-Path (Join-Path $chocolateyDir "chocolateyInstall") "chocolatey.cmd"
         iex "$choco install gitversion.portable"
         if ($LASTEXITCODE -ne 0) {
             throw "Error installing GitVersion"
@@ -107,6 +110,16 @@ try {
     } else {
         Write-Host "GitVersion already installed"
     }
+
+    if ($updateGitVersion -eq "true") {
+        Write-Host "##teamcity[progressMessage 'Checking for updated version of GitVersion']"
+        iex "$choco update gitversion.portable"
+        if ($LASTEXITCODE -ne 0) {
+            throw "Error updating GitVersion"
+        }
+    } else {
+        Write-Host "GitVersion will not be updated"
+    }	
 
     $outputFile = Join-ToWorkingDirectoryIfSpecified $outputFile
     $logFile = Join-ToWorkingDirectoryIfSpecified $logFile
