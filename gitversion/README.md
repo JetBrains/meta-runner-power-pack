@@ -15,20 +15,20 @@ GitVersion Runner
 ![Runner configuration in TeamCity](documentation/assets/gitversion_runner.png)
 
 The following options can be specified:
-* Git Repository Directory: The directory containing .git relative to the working directory. Leave blank for the working directory itself.
-* Update TeamCity build version: Update the TeamCity build number or output JSON?
-* Json output file: Optional path to a file relative to the working directory to output the json into if you selected JSON above.
-* Remote Git Repository: Optional URL to remote git repository if you have not already checked one out.
-* Remote Git Branch: Remote branch to use.
-* Remote Git Username: Remote git repo username (if private).
-* Remote Git Password: Remote git repo password (if private).
-* Log File: Optional path to a file relative to the working directory to log output messages to.
-* Executable: Optional executable relative to the working directory to run using GitVersion - environment vars will be available to the process.
-* Executable Arguments: If an Executable is specified then arguments to pass to the executable.
-* MSBuild File: Optional MSBuild file relative to the working directory to run using GitVersion - environment vars will be available to the process.
-* MSBuild Arguments: If an MSBuild file is specified then arguments to pass to MSBuild.
-* Update AssemblyInfo Files: Update any AssemblyInfo files while running the Executable or MSBuild file?
-* Update GitVersion: Use Chocolatey to check whether a new version of GitVersion is available
+* **Git Repository Directory:** The directory containing .git relative to the working directory. Leave blank for the working directory itself.
+* **Update TeamCity build version:** Update the TeamCity build number or output JSON?
+* **Json output file:** Optional path to a file relative to the working directory to output the json into if you selected JSON above.
+* **Remote Git Repository:** Optional URL to remote git repository if you have not already checked one out.
+* **Remote Git Branch:** Remote branch to use.
+* **Remote Git Username:** Remote git repo username (if private).
+* **Remote Git Password:** Remote git repo password (if private).
+* **Log File:** Optional path to a file relative to the working directory to log output messages to.
+* **Executable:** Optional executable relative to the working directory to run using GitVersion - environment vars will be available to the process.
+* **Executable Arguments:** If an Executable is specified then arguments to pass to the executable.
+* **MSBuild File:** Optional MSBuild file relative to the working directory to run using GitVersion - environment vars will be available to the process.
+* **MSBuild Arguments:** If an MSBuild file is specified then arguments to pass to MSBuild.
+* **Update AssemblyInfo Files:** Update any AssemblyInfo files while running the Executable or MSBuild file?
+* **Update GitVersion:** Use Chocolatey to check whether a new version of GitVersion is available
 
 For more information about these arguments please consult the [GitVersion Commandline Documentation](https://github.com/Particular/GitVersion/wiki/Command-Line-Tool).
 
