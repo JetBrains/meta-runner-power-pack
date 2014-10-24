@@ -35,5 +35,4 @@ Known Issues
 ------------
 
 1. You can't include spaces in the `execArgs` or `projArgs`
-2. Once this gets a gitversion installed on the server from Chocolatey it will never try and update it - It could include a call to cinst to update it if necessary every run, but that will add at least 1-2s (if not more) to every build run due to Chocolatey's slowness. That's why it checks the filesystem for chocolatey rather than invoking a Chocolatey command to see if it already exists.
-3. While it will fail the build if there is a problem, it won't fail the step (the PowerShell script always returns a 0 exit code unfortunately) so any steps after it that are marked as "Run if all previous steps successful" rather than "Run if build successful" will still run
+2. While it will fail the build if there is a problem, it won't fail the step (the PowerShell script always returns a 0 exit code unfortunately) so any steps after it that are marked as "Run if all previous steps successful" rather than "Run if build successful" will still run
