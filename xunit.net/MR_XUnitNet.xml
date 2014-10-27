@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<meta-runner name="xUnit.net + dotCover">
+  <description>Run xUnit.net tests with dotCover coverage</description>
+  <settings>
+    <parameters>
+        <param name="mr.XUnitNet.assembliesToTest" value="" spec="text description='The assembly/ies to test; relative to the working directory.' display='normal' label='Assembly/ies to test:'" />
+        <param name="mr.XUnitNet.dotCoverFilters" value="" spec="text description='Any dotCover filters to apply.' display='normal' label='dotCover filters:'" />
+    </parameters>
+    <build-runners>
+      <runner name="Install xUnit from Chocolatey" type="jetbrains_powershell">
+        <parameters>
+          <param name="jetbrains_powershell_execution" value="PS1" />
+          <param name="jetbrains_powershell_noprofile" value="true" />
+          <param name="jetbrains_powershell_errorToError" value="error" />
+          <param name="jetbrains_powershell_script_mode" value="CODE" />
+          <param name="jetbrains_powershell_bitness" value="x86" />
+          <param name="teamcity.step.mode" value="default" />
+          <param name="jetbrains_powershell_script_code"><![CDATA[
+[CmdletBinding()]
+Param (
+    [string] $workingDir = "%teamcity.build.workingDir%"
+)
+
+$ErrorActionPreference = "Stop"
+
+try {
+
+    $chocolateyDir = $null
+    #if ($env:ChocolateyInstall -ne $null) {
+    #    $chocolateyDir = $env:ChocolateyInstall
+    #} elseif (Test-Path (Join-Path $env:SYSTEMDRIVE Chocolatey)) {
+    #    $chocolateyDir = Join-Path $env:SYSTEMDRIVE Chocolatey
+    #} elseif (Test-Path (Join-Path ([Environment]::GetFolderPath("CommonApplicationData")) Chocolatey)) {
+    #    $chocolateyDir = Join-Path ([Environment]::GetFolderPath("CommonApplicationData")) Chocolatey
+    #}
+    $chocolateyDir = "C:\ProgramData\Chocolatey"
+    
+    if ($chocolateyDir -eq $null) {
+        Write-Host "##teamcity[progressMessage 'Chocolatey not installed; installing Chocolatey']"
+        iex ((new-object net.webclient).DownloadString('https://chocolatey.org/install.ps1'))
+	$chocolateyDir = Join-Path ([Environment]::GetFolderPath("CommonApplicationData")) Chocolatey
+        if (-not (Test-Path $chocolateyDir)) {
+            throw "Error installing Chocolatey"
+        }
+    } else {
+        Write-Host "Chocolatey already installed"
+    }
+
+    if ($chocolateyDir -ne "C:\ProgramData\Chocolatey") {
+        throw "Make sure you are running the latest version of Chocolatey and it's installed to C:\ProgramData\Chocolatey; see known limitations at https://github.com/JetBrains/meta-runner-power-pack/xunit.net"
+    }
+
+    $chocolateyBinDir = Join-Path $chocolateyDir "bin"
+    #$xunit = Join-Path $chocolateyBinDir "xunit.console.clr4.bat"
+    #if (-not (Test-Path $xunit)) {
+    #    $xunit = Join-Path $chocolateyBinDir "xunit.console.clr4.exe"
+    #}
+    $xunit = Join-Path $chocolateyBinDir "xunit.console.clr4.exe"
+    if (-not (Test-Path $xunit)) {
+        Write-Host "##teamcity[progressMessage 'xUnit.net not installed; installing xUnit.net']"
+        $choco = Join-Path (Join-Path $chocolateyDir "chocolateyInstall") "chocolatey.cmd"
+        iex "$choco install xunit"
+        if ($LASTEXITCODE -ne 0) {
+            throw "Error installing xUnit.net"
+        }
+    } else {
+        Write-Host "xUnit.net already installed"
+    }
+
+    #Write-Host "##teamcity[setParameter name='mr.XUnitNet.exe' value='$xunit']"
+}
+catch {
+    Write-Host "##teamcity[buildStatus text='$_' status='FAILURE']"
+    Write-Host "##teamcity[message text='$_' status='ERROR']"
+    exit 1
+}
+          ]]></param>
+        </parameters>
+      </runner>
+      <runner name="Run xUnit.net tests" type="jetbrains.dotNetGenericRunner">
+        <parameters>
+          <param name="dotNetCoverage.dotCover.filters">%mr.XUnitNet.dotCoverFilters%</param>
+          <param name="dotNetCoverage.tool" value="dotcover" />
+          <param name="dotNetTestRunner.Type" value="GenericProcess" />
+          <param name="proc_additional_commandline">%mr.XUnitNet.assembliesToTest%</param>
+          <param name="proc_bit" value="MSIL" />
+	  <!--<param name="proc_path" value="%mr.XUnitNet.exe%" />-->
+	  <param name="proc_path" value="C:\ProgramData\Chocolatey\bin\xunit.console.clr4.exe" />
+          <param name="proc_runtime_version" value="v4.0" />
+          <param name="teamcity.step.mode" value="default" />
+        </parameters>
+      </runner>
+    </build-runners>
+    <requirements />
+  </settings>
+</meta-runner>
