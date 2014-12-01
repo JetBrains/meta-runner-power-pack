@@ -49,7 +49,7 @@
 &lt;/target&gt;
 
 &lt;target name="addTags" depends="prepare-params"&gt;
-&lt;http url="%teamcity.serverUrl%/httpAuth/api/builds/id:%teamcity.build.id%/tags" 
+&lt;http url="%teamcity.serverUrl%/httpAuth/app/rest/8.0/builds/id:%teamcity.build.id%/tags" 
       method="POST" 
       expected="204"
       printrequest="true"&gt;
