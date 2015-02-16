@@ -6,24 +6,14 @@
       <param name="mr.GenerateGitReleaseNotes.Repository" value="" spec="text description='The GitHub repository to generate release notes for, e.g. maartenba/repo1.' display='normal' label='Repository:' validationMode='any'" />
       <param name="mr.GenerateGitReleaseNotes.Token" value="" spec="text description='GitHub OAuth2 token which can be used to connect to the GitHub repository.' display='normal' label='OAuth2 token:' validationMode='any'" />
       <param name="mr.GenerateGitReleaseNotes.OutputFile" value="%teamcity.build.workingDir%\releasenotes.md" spec="text description='Specified the file in which release notes are generated.' display='normal' label='Output File:' validationMode='any'" />
-      <param name="mr.GenerateGitReleaseNotes.ProjectId" value="" spec="text description='Issue tracker project ID.' display='normal' label='Project Id:' validationMode='any'" />
-      <param name="mr.GenerateGitReleaseNotes.IssueTracker" value="GitHub" spec="text description='Specifies the issue tracker used, possible Options: GitHub, Jira, YouTrack, BitBucket.' display='normal' label='Issue Tracker:' validationMode='any'" />
-      <param name="mr.GenerateGitReleaseNotes.Username" value="" spec="text description='Issue tracker username.' display='normal' label='Username:' validationMode='any'" />
-      <param name="mr.GenerateGitReleaseNotes.Password" value="" spec="password description='Issue tracker password.' display='normal' label='Password:' validationMode='any'" />
-      <param name="mr.GenerateGitReleaseNotes.JiraServer" value="" spec="text description='Url of Jira server.' display='normal' label='Jira Server:' validationMode='any'" />
       <param name="mr.GenerateGitReleaseNotes.AllTags" value="false" spec="checkbox checkedValue='true' uncheckedValue='false' description='Specifies that all tags should be included in the release notes, if not specified then only the issues since the last tag are included.' display='normal' label='All Tags:' validationMode='any'" />
-      <param name="mr.GenerateGitReleaseNotes.Jql" value="" spec="text description='Jql query for closed issues' display='normal' label='Jql:' validationMode='any'" />
       <param name="mr.GenerateGitReleaseNotes.Version" value="" spec="text description='Specifies the version to publish.' display='normal' label='Version:' validationMode='any'" />
-      <param name="mr.GenerateGitReleaseNotes.YouTrackServer" value="" spec="text description='Url of YouTrack server' display='normal' label='YouTrack server URL:' validationMode='any'" />
-      <param name="mr.GenerateGitReleaseNotes.YouTrackFilter" value="" spec="text description='YouTrack filter for closed issues that you would like included if mentioned.' display='normal' label='YouTrack Filter:' validationMode='any'" />
-      <param name="mr.GenerateGitReleaseNotes.ConsumerKey" value="" spec="text description='BitBuckets Consumer Key used for Oauth authentication' display='normal' label='BitBucket Consumer Key:' validationMode='any'" />
-      <param name="mr.GenerateGitReleaseNotes.ConsumerSecretKey" value="" spec="text description='BitBuckets Consumer Secret Key used for Oauth authentication' display='normal' label='BitBucket Consumer Secret:' validationMode='any'" />
-      <param name="mr.GenerateGitReleaseNotes.Verbose" value="false" spec="checkbox checkedValue='true' uncheckedValue='false' description='Enables verbose logging.' display='normal' label='Verbose:' validationMode='any'" />
-    </parameters>
+      </parameters>
     <build-runners>
       <runner id="RUNNER_14" name="" type="Ant">
         <parameters>
-          <param name="build-file"><![CDATA[<project name="MetaRunner">
+          <param name="build-file">
+    <![CDATA[<project name="MetaRunner">
 
 <property name="mr.GenerateGitReleaseNotes.GitReleaseNotes.NugetVersion" value="0.6.0" />
 
@@ -40,9 +30,9 @@
 
 <target name="runExecutable">
   <echo>Running GitReleaseNotes.exe...</echo>
-  <echo>The command is.... /WorkingDirectory &quot;${teamcity.build.workingDir}&quot; /IssueTracker %mr.GenerateGitReleaseNotes.IssueTracker% /Repo %mr.GenerateGitReleaseNotes.Repository% /Token %mr.GenerateGitReleaseNotes.Token% /OutputFile &quot;%mr.GenerateGitReleaseNotes.OutputFile%&quot; /ProjectId %mr.GenerateGitReleaseNotes.ProjectId% /Username %mr.GenerateGitReleaseNotes.Username% /Password %mr.GenerateGitReleaseNotes.Password% /JiraServer %mr.GenerateGitReleaseNotes.JiraServer% /AllTags %mr.GenerateGitReleaseNotes.AllTags% /Jql &quot;%mr.GenerateGitReleaseNotes.Jql%&quot; /Version %mr.GenerateGitReleaseNotes.Version% /YouTrackServer %mr.GenerateGitReleaseNotes.YouTrackServer% /YouTrackFilter %mr.GenerateGitReleaseNotes.YouTrackFilter% /ConsumerKey %mr.GenerateGitReleaseNotes.ConsumerKey% /ConsumerSecretKey %mr.GenerateGitReleaseNotes.ConsumerSecretKey% /Verbose %mr.GenerateGitReleaseNotes.Verbose% </echo>
-  <exec executable="${teamcity.build.tempDir}\packages\GitReleaseNotesEx.${mr.GenerateGitReleaseNotes.GitReleaseNotes.NugetVersion}\tools\GitReleaseNotes.exe" dir="${teamcity.build.workingDir}" failonerror="false">
-    <arg line='/WorkingDirectory ${teamcity.build.workingDir} /IssueTracker %mr.GenerateGitReleaseNotes.IssueTracker% /Repo %mr.GenerateGitReleaseNotes.Repository% /Token %mr.GenerateGitReleaseNotes.Token% /OutputFile %mr.GenerateGitReleaseNotes.OutputFile% /ProjectId %mr.GenerateGitReleaseNotes.ProjectId% /Username %mr.GenerateGitReleaseNotes.Username% /Password %mr.GenerateGitReleaseNotes.Password% /JiraServer %mr.GenerateGitReleaseNotes.JiraServer% /AllTags %mr.GenerateGitReleaseNotes.AllTags% /Jql &quot;%mr.GenerateGitReleaseNotes.Jql%&quot; /Version %mr.GenerateGitReleaseNotes.Version% /YouTrackServer %mr.GenerateGitReleaseNotes.YouTrackServer% /YouTrackFilter %mr.GenerateGitReleaseNotes.YouTrackFilter% /ConsumerKey %mr.GenerateGitReleaseNotes.ConsumerKey% /ConsumerSecretKey %mr.GenerateGitReleaseNotes.ConsumerSecretKey% /Verbose %mr.GenerateGitReleaseNotes.Verbose% '/>
+  <echo>The command is.... /WorkingDirectory ${teamcity.build.workingDir} /IssueTracker GitHub /Repo %mr.GenerateGitReleaseNotes.Repository% /Token %mr.GenerateGitReleaseNotes.Token% /OutputFile %mr.GenerateGitReleaseNotes.OutputFile% /AllTags %mr.GenerateGitReleaseNotes.AllTags% /Version %mr.GenerateGitReleaseNotes.Version% /Verbose %mr.GenerateGitReleaseNotes.Verbose% </echo>
+  <exec executable="${teamcity.build.tempDir}\packages\GitReleaseNotes.${mr.GenerateGitReleaseNotes.GitReleaseNotes.NugetVersion}\tools\GitReleaseNotes.exe" dir="${teamcity.build.workingDir}" failonerror="false">
+    <arg line='/WorkingDirectory ${teamcity.build.workingDir} /IssueTracker GitHub /Repo %mr.GenerateGitReleaseNotes.Repository% /Token %mr.GenerateGitReleaseNotes.Token% /OutputFile %mr.GenerateGitReleaseNotes.OutputFile% /AllTags %mr.GenerateGitReleaseNotes.AllTags% /Version %mr.GenerateGitReleaseNotes.Version% /Verbose %mr.GenerateGitReleaseNotes.Verbose% '/>
   </exec>
   <echo>Finished running GitReleaseNotes.exe.</echo>
 </target>
