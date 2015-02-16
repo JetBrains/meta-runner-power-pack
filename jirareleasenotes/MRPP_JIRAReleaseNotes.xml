@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<meta-runner name="Generate GitHub Release Notes">
+  <description>Generate JIRA Release Notes</description>
+  <settings>
+    <parameters>
+      <param name="mr.GenerateGitReleaseNotes.JiraServer" value="" spec="text description='Url of Jira server.' display='normal' label='Jira Server:' validationMode='any'" />
+      <param name="mr.GenerateGitReleaseNotes.ProjectId" value="" spec="text description='Issue tracker project ID.' display='normal' label='Project Id:' validationMode='any'" />
+      <param name="mr.GenerateGitReleaseNotes.Jql" value="" spec="text description='Jql query for closed issues' display='normal' label='Jql:' validationMode='any'" />
+      <param name="mr.GenerateGitReleaseNotes.OutputFile" value="%teamcity.build.workingDir%\releasenotes.md" spec="text description='Specifies the file in which release notes are generated.' display='normal' label='Output File:' validationMode='any'" />
+      <param name="mr.GenerateGitReleaseNotes.Username" value="" spec="text description='Issue tracker username.' display='normal' label='Username:' validationMode='any'" />
+      <param name="mr.GenerateGitReleaseNotes.Password" value="" spec="password description='Issue tracker password.' display='normal' label='Password:' validationMode='any'" />
+      <param name="mr.GenerateGitReleaseNotes.AllTags" value="false" spec="checkbox checkedValue='true' uncheckedValue='false' description='Specifies that all tags should be included in the release notes, if not specified then only the issues since the last tag are included.' display='normal' label='All Tags:' validationMode='any'" />
+      <param name="mr.GenerateGitReleaseNotes.Version" value="" spec="text description='Specifies the version to publish.' display='normal' label='Version:' validationMode='any'" />
+    </parameters>
+    <build-runners>
+      <runner id="RUNNER_14" name="" type="Ant">
+        <parameters>
+          <param name="build-file">
+            <![CDATA[<project name="MetaRunner">
+
+<property name="mr.GenerateGitReleaseNotes.GitReleaseNotes.NugetVersion" value="0.6.0" />
+
+<target name="run" depends="downloadExecutable,runExecutable">
+</target>
+
+<target name="downloadExecutable">
+  <echo>Downloading and extracting latest GitReleaseNotes.exe...</echo>
+  <exec executable="%teamcity.tool.NuGet.CommandLine.DEFAULT.nupkg%\tools\NuGet.exe" dir="${teamcity.build.tempDir}" failonerror="false">
+    <arg line="install GitReleaseNotes -Version ${mr.GenerateGitReleaseNotes.GitReleaseNotes.NugetVersion} -OutputDirectory &quot;${teamcity.build.tempDir}\packages&quot;"/>
+  </exec>  
+  <echo>Downloaded and extracted latest GitReleaseNotes.exe.</echo>
+</target>
+
+<target name="runExecutable">
+  <echo>Running GitReleaseNotes.exe...</echo>
+  <echo>The command is.... /WorkingDirectory ${teamcity.build.workingDir} /IssueTracker Jira /OutputFile %mr.GenerateGitReleaseNotes.OutputFile% /ProjectId %mr.GenerateGitReleaseNotes.ProjectId% /Username %mr.GenerateGitReleaseNotes.Username% /Password %mr.GenerateGitReleaseNotes.Password% /JiraServer %mr.GenerateGitReleaseNotes.JiraServer% /AllTags %mr.GenerateGitReleaseNotes.AllTags% /Jql &quot;%mr.GenerateGitReleaseNotes.Jql%&quot; /Version %mr.GenerateGitReleaseNotes.Version% /Verbose true </echo>
+  <exec executable="${teamcity.build.tempDir}\packages\GitReleaseNotes.${mr.GenerateGitReleaseNotes.GitReleaseNotes.NugetVersion}\tools\GitReleaseNotes.exe" dir="${teamcity.build.workingDir}" failonerror="false">
+    <arg line='/WorkingDirectory ${teamcity.build.workingDir} /IssueTracker Jira /OutputFile %mr.GenerateGitReleaseNotes.OutputFile% /ProjectId %mr.GenerateGitReleaseNotes.ProjectId% /Username %mr.GenerateGitReleaseNotes.Username% /Password %mr.GenerateGitReleaseNotes.Password% /JiraServer %mr.GenerateGitReleaseNotes.JiraServer% /AllTags %mr.GenerateGitReleaseNotes.AllTags% /Jql &quot;%mr.GenerateGitReleaseNotes.Jql%&quot; /Version %mr.GenerateGitReleaseNotes.Version% /Verbose true '/>
+  </exec>
+  <echo>Finished running GitReleaseNotes.exe.</echo>
+</target>
+
+
+</project>]]>
+          </param>
+          <param name="build-file-path" value="build.xml" />
+          <param name="target" value="run" />
+          <param name="teamcity.coverage.emma.include.source" value="true" />
+          <param name="teamcity.coverage.emma.instr.parameters" value="-ix -*Test*" />
+          <param name="teamcity.coverage.idea.includePatterns" value="*" />
+          <param name="teamcity.step.mode" value="default" />
+          <param name="use-custom-build-file" value="true" />
+        </parameters>
+      </runner>
+    </build-runners>
+    <requirements />
+  </settings>
+</meta-runner>
