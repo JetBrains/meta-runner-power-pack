@@ -44,7 +44,7 @@ try {
     }
 
     if ($chocolateyDir -ne "%env.ProgramData%\Chocolatey") {
-        throw "Make sure you are running the latest version of Chocolatey and it's installed to C:\ProgramData\Chocolatey; see known limitations at https://github.com/JetBrains/meta-runner-power-pack/xunit.net"
+        throw "Make sure you are running the latest version of Chocolatey and it's installed to %env.ProgramData%\Chocolatey; see known limitations at https://github.com/JetBrains/meta-runner-power-pack/xunit.net"
 	}
 	
     $chocolateyBinDir = Join-Path $chocolateyDir "bin"
