@@ -3,7 +3,7 @@
   <description>Update AppSetting. Note an AppSetting with the correct key must be defined in the configuration file.</description>
   <settings>
     <parameters>
-      <param name="system.config.file" value="" spec="text description='Confguration file in which the AppSetting should be updated' display='normal' label='Configuration file' validationMode='not_empty'" />
+      <param name="system.config.file" value="" spec="text description='Configuration file in which the AppSetting should be updated' display='normal' label='Configuration file' validationMode='not_empty'" />
       <param name="system.appsetting.key" value="" spec="text description='Key of the AppSetting to update' display='normal' label='AppSetting key' validationMode='not_empty'" />
       <param name="system.appsetting.value" value="" spec="text description='The new AppSetting value' display='normal' label='AppSetting value' validationMode='not_empty'" />
     </parameters>
