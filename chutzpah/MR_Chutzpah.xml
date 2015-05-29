@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<meta-runner name="Chutzpah">
+  <description>Run Chutzpah tests</description>
+  <settings>
+    <parameters>
+      <param name="mr.Chutzpah.pathsToTest" value="" spec="text validationMode='any' description='The files or folders to test, relative to the working directory.' display='normal' label='Paths to test:'" />
+    </parameters>
+    <build-runners>
+      <runner name="Install Chutzpah from Chocolatey" type="jetbrains_powershell">
+        <parameters>
+          <param name="jetbrains_powershell_execution" value="PS1" />
+          <param name="jetbrains_powershell_noprofile" value="true" />
+          <param name="jetbrains_powershell_errorToError" value="error" />
+          <param name="jetbrains_powershell_script_mode" value="CODE" />
+          <param name="jetbrains_powershell_bitness" value="x86" />
+          <param name="teamcity.step.mode" value="default" />
+          <param name="jetbrains_powershell_script_code"><![CDATA[[CmdletBinding()]
+Param (
+    [string] $workingDir = "%teamcity.build.workingDir%"
+)
+
+$ErrorActionPreference = "Stop"
+
+try {
+    $chocolateyDir = $null
+    if ($env:ChocolateyInstall -ne $null) {
+        $chocolateyDir = $env:ChocolateyInstall
+    } elseif (Test-Path (Join-Path $env:SYSTEMDRIVE Chocolatey)) {
+        $chocolateyDir = Join-Path $env:SYSTEMDRIVE Chocolatey
+    } elseif (Test-Path (Join-Path ([Environment]::GetFolderPath("CommonApplicationData")) Chocolatey)) {
+        $chocolateyDir = Join-Path ([Environment]::GetFolderPath("CommonApplicationData")) Chocolatey
+    }
+    
+    if ($chocolateyDir -eq $null) {
+        Write-Host "##teamcity[progressMessage 'Chocolatey not installed; installing Chocolatey']"
+        iex ((new-object net.webclient).DownloadString('https://chocolatey.org/install.ps1'))
+	$chocolateyDir = Join-Path ([Environment]::GetFolderPath("CommonApplicationData")) Chocolatey
+        if (-not (Test-Path $chocolateyDir)) {
+            throw "Error installing Chocolatey"
+        }
+    } else {
+        Write-Host "Chocolatey already installed"
+    }
+
+    if ($chocolateyDir -ne "%env.ProgramData%\Chocolatey") {
+        throw "Make sure you are running the latest version of Chocolatey and it's installed to %env.ProgramData%\Chocolatey; see known limitations at https://github.com/JetBrains/meta-runner-power-pack/Chutzpah"
+	}
+	
+    $chocolateyBinDir = Join-Path $chocolateyDir "bin"
+    $Chutzpah = Join-Path $chocolateyBinDir "chutzpah.console.exe"
+
+    if (-not (Test-Path $Chutzpah)) {
+		$choco = Join-Path $chocolateyDir "choco.exe"
+		
+		if (Test-Path (Join-Path $chocolateyBinDir "chutzpah.console.bat")) {
+			Write-Host "##teamcity[progressMessage 'Found old-style shim for Chutzpah; forcing re-install']"
+			iex "$choco install Chutzpah -f -y"
+			if ($LASTEXITCODE -ne 0) {
+				throw "Error force installing Chutzpah"
+			}			
+		} else {
+		
+			Write-Host "##teamcity[progressMessage 'Chutzpah not installed; installing Chutzpah']"
+			iex "$choco install Chutzpah -y"
+			if ($LASTEXITCODE -ne 0) {
+				throw "Error installing Chutzpah"
+			}
+		}
+		
+    } else {
+        Write-Host "Chutzpah already installed"
+    }
+
+}
+catch {
+    Write-Host "##teamcity[buildStatus text='$_' status='FAILURE']"
+    Write-Host "##teamcity[message text='$_' status='ERROR']"
+    exit 1
+}]]></param>
+        </parameters>
+      </runner>
+      <runner name="Run Chutzpah tests" type="simpleRunner">
+        <parameters>
+          <param name="command.executable" value="%env.ProgramData%\chocolatey\bin\chutzpah.console.exe" />
+          <param name="command.parameters" value="/path %mr.Chutzpah.pathsToTest% /failOnError" />
+          <param name="teamcity.step.mode" value="default" />
+        </parameters>
+      </runner>
+    </build-runners>
+    <requirements />
+  </settings>
+</meta-runner>
