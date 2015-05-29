@@ -56,7 +56,7 @@ try {
     if (-not (Test-Path $xunit)) {
         Write-Host "##teamcity[progressMessage 'xUnit.net not installed; installing xUnit.net']"
         $choco = Join-Path (Join-Path $chocolateyDir "chocolateyInstall") "chocolatey.cmd"
-        iex "$choco install xunit -version 2.0.0"
+        iex "$choco install xunit -version 2.0.0 -y"
         if ($LASTEXITCODE -ne 0) {
             throw "Error installing xUnit.net"
         }
