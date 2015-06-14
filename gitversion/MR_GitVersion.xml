@@ -130,11 +130,11 @@ try {
         $gitversion = Join-Path $chocolateyBinDir "gitversion.exe"
     }
 	
-    $choco = Join-Path (Join-Path $chocolateyDir "chocolateyInstall") "chocolatey.cmd"
+    $choco = Join-Path $chocolateyDir "choco.exe"
 	
     if (-not (Test-Path $gitversion)) {
         Write-Host "##teamcity[progressMessage 'GitVersion not installed; installing GitVersion']"
-        iex "$choco install gitversion.portable"
+        iex "$choco install gitversion.portable -y"
         if ($LASTEXITCODE -ne 0) {
             throw "Error installing GitVersion"
         }
@@ -144,7 +144,7 @@ try {
 
     if ($updateGitVersion -eq "true") {
         Write-Host "##teamcity[progressMessage 'Checking for updated version of GitVersion']"
-        iex "$choco update gitversion.portable"
+        iex "$choco update gitversion.portable -y"
         if ($LASTEXITCODE -ne 0) {
             throw "Error updating GitVersion"
         }
