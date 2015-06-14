@@ -18,8 +18,9 @@ Known Issues
 ------------
 
 1. Once this gets xUnit.net 2.x installed on the server from Chocolatey it will never try and update it - It could include a call to cinst to update it if necessary every run, but that will add at least 1-2s (if not more) to every build run due to Chocolatey's slowness. That's why it checks the filesystem for chocolatey rather than invoking a Chocolatey command to see if it already exists.
-2. Due to difficulties passing dynamic variables between meta-runner runners this meta-runner only works with Chocolatey > 0.9.8.27 and where Chocolatey is installed to %ProgramData%\Chocolatey.
-3. Currently this meta-runner is hardcoded to use dotCover
+2. Due to difficulties passing dynamic variables between meta-runner runners this meta-runner only where Chocolatey is installed to %ProgramData%\Chocolatey.
+3. Currently this meta-runner is hard-coded to use dotCover
 4. This meta-runner is compatible with the xUnit.net 2.0 console runner and therefore forces an update to xUnit.net
 2.0. It does this by hard-coding the chocolatey package reference to XUnit 2.0.0 (which is currently in the package
 moderation queue).
+5. Due to incompatible command line arguments, this meta-runner only works with Chocolatey > 0.9.8.32
