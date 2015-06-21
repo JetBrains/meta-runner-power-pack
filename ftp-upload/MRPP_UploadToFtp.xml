@@ -80,7 +80,7 @@
 </project>]]></param>
           <param name="build-file-path" value="build.xml" />
           <param name="target" value="put-files" />
-          <param name="runnerArgs" value="-lib %teamcity.tool.ant-net-tasks%" />
+          <param name="runnerArgs" value="-lib &quot;%teamcity.tool.ant-net-tasks%&quot;" />
           <param name="teamcity.coverage.emma.include.source" value="true" />
           <param name="teamcity.coverage.emma.instr.parameters" value="-ix -*Test*" />
           <param name="teamcity.coverage.idea.includePatterns" value="*" />
