@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<meta-runner name="Clean NuGet v2 cache">
+  <description>Cleans NuGet v2 cache (%LOCALAPPDATA%\NuGet\Cache)</description>
+  <settings>
+    <parameters>
+    </parameters>
+    <build-runners>
+      <runner name="RunCommand" type="simpleRunner">
+        <parameters>
+          <param name="script.content" value="del %env.LOCALAPPDATA%\NuGet\Cache\* /F /Q" />
+          <param name="teamcity.step.mode" value="default" />
+          <param name="use.custom.script" value="true" />
+        </parameters>
+      </runner>
+    </build-runners>
+    <requirements />
+  </settings>
+</meta-runner>
