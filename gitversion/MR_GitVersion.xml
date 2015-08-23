@@ -144,7 +144,7 @@ try {
 
     if ($updateGitVersion -eq "true") {
         Write-Host "##teamcity[progressMessage 'Checking for updated version of GitVersion']"
-        iex "$choco update gitversion.portable -y"
+        iex "$choco upgrade gitversion.portable -y"
         if ($LASTEXITCODE -ne 0) {
             throw "Error updating GitVersion"
         }
