@@ -7,7 +7,9 @@
       <param name="mr.GitVersion.output" value="buildserver" spec="checkbox checkedValue='buildserver' description='Update the TeamCity build number or output JSON?' display='normal' label='Update TeamCity build version:' uncheckedValue='json'" />
       <param name="mr.GitVersion.outputFile" value="" spec="text description='Optional path to a file relative to the working directory to output the json into if you selected JSON above.' display='normal' label='Json output file:'" />
       <param name="mr.GitVersion.url" value="" spec="text description='Optional URL to remote git repository if you have not already checked one out.' display='normal' label='Remote Git Repository:'" />
+      <param name="mr.GitVersion.dynamicRepoLocation" value="" spec="text description='Path to the dynamic repository GitVersion may have to create.' display='normal' label='Dynamic Repository Path:'" />
       <param name="mr.GitVersion.branch" value="" spec="text description='Remote branch to use.' display='normal' label='Remote Git Branch:'" />
+      <param name="mr.GitVersion.commitId" value="" spec="text description='Commit to use. By default, the latest commit in the branch is used.' display='normal' label='Git Commit Hash:'" />
       <param name="mr.GitVersion.username" value="" spec="text description='Remote git repo username (if private).' display='normal' label='Remote Git Username:'" />
       <param name="mr.GitVersion.password" value="" spec="password description='Remote git repo password (if private).' display='normal' label='Remote Git Password:'" />
       <param name="mr.GitVersion.logFile" value="" spec="text description='Optional path to a file relative to the working directory to log output messages to.' display='normal' label='Log File:'" />
@@ -34,7 +36,9 @@ Param (
     [string] $output = '%mr.GitVersion.output%',
     [string] $outputFile = '%mr.GitVersion.outputFile%',
     [string] $url = '%mr.GitVersion.url%',
+    [string] $dynamicRepoLocation = '%mr.GitVersion.dynamicRepoLocation%',
     [string] $branch = '%mr.GitVersion.branch%',
+    [string] $commitId = '%mr.GitVersion.commitId%',
     [string] $username = '%mr.GitVersion.username%',
     [string] $password = '%mr.GitVersion.password%',
     [string] $logFile = '%mr.GitVersion.logFile%',
@@ -80,7 +84,9 @@ function Build-Arguments() {
         $args = """$workingDir"""
     }
     $args = Append-IfSpecified $args "url" $url
+    $args = Append-IfSpecified $args "dynamicRepoLocation" $dynamicRepoLocation
     $args = Append-IfSpecified $args "b" $branch
+    $args = Append-IfSpecified $args "c" $commitId
     $args = Append-IfSpecified $args "u" $username
     $args = Append-IfSpecified $args "p" $password
     $args = Append-IfSpecified $args "output" $output
@@ -144,7 +150,7 @@ try {
 
     if ($updateGitVersion -eq "true") {
         Write-Host "##teamcity[progressMessage 'Checking for updated version of GitVersion']"
-        iex "$choco update gitversion.portable -y"
+        iex "$choco upgrade gitversion.portable -y"
         if ($LASTEXITCODE -ne 0) {
             throw "Error updating GitVersion"
         }
