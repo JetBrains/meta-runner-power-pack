@@ -42,8 +42,6 @@
   <isfalse value="${phpunit.coverage.set}"/>
 </condition>
 
-<property name="phpunit.result.error" value="false" />
-
 <target name="runTests" depends="getPhpUnit,runPhpUnitPhar,runPhpUnitRuntime,collectCoverage">
   <fail message="Unit test error." if="${phpunit.result.error}" />
 </target>
