@@ -1,7 +1,7 @@
 Meta-runner Power Pack
 ======================
 
-A collection of [Meta-runners](http://confluence.jetbrains.com/display/TCD8/Working+with+Meta-Runner) for TeamCity.
+A collection of [Meta-runners](http://confluence.jetbrains.com/display/TCD9/Working+with+Meta-Runner) for TeamCity.
 
 Available Meta-Runners
 ======================
@@ -35,11 +35,11 @@ Available Meta-Runners
 Installation Instructions
 =========================
 
-Each file called **MRPP_\<some text\>.xml** contains a definition of a single [Meta-runner](http://confluence.jetbrains.com/display/TCD8/Working+with+Meta-Runner).
+Each file called **MRPP_\<some text\>.xml** contains a definition of a single [Meta-runner](http://confluence.jetbrains.com/display/TCD9/Working+with+Meta-Runner).
 
 You can install a meta-runner directly via the file system or, since TeamCity 9.0 EAP1, using the TeamCity Web UI:
 
-- to install Meta-runner directly to the file system, take the Meta-runner definition file and put it into the [\<TeamCity Data Directory\>](http://confluence.jetbrains.com/display/TCD8/TeamCity+Data+Directory)/config/projects/\<Project ID\>/pluginData/metaRunners/ directory, where **\<Project ID\>** is the identifier of a project where you want to place the Meta-runner. If the **metaRunners** directory does not exist, it will be created. Once you place the file on the disk, TeamCity will detect it and load this Meta-runner; no server restart is required.
+- to install Meta-runner directly to the file system, take the Meta-runner definition file and put it into the [\<TeamCity Data Directory\>](http://confluence.jetbrains.com/display/TCD9/TeamCity+Data+Directory)/config/projects/\<Project ID\>/pluginData/metaRunners/ directory, where **\<Project ID\>** is the identifier of a project where you want to place the Meta-runner. If the **metaRunners** directory does not exist, it will be created. Once you place the file on the disk, TeamCity will detect it and load this Meta-runner; no server restart is required.
 
 - to install Meta-runner via the Web UI, go to the Project Settings page, select Meta-Runners from the list of settings on the left, click Upload Meta-Runner and select the Meta-runner definition file. Save you changes.
 
