@@ -30,6 +30,7 @@ Available Meta-Runners
     * [PSGet installer](https://github.com/JetBrains/meta-runner-power-pack/tree/master/psget)
     * [SemVer build number](https://github.com/JetBrains/meta-runner-power-pack/tree/master/semver-buildnumber)
     * [Generate GitHub Release Notes](https://github.com/JetBrains/meta-runner-power-pack/tree/master/githubreleasenotes)
+    * [Xunit runner with dotCover](https://github.com/JetBrains/meta-runner-power-pack/tree/master/xUnit.net-dotCover)
 
 
 Installation Instructions
