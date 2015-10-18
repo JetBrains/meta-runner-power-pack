@@ -1,13 +1,13 @@
 GitVersion meta-runner for TeamCity
 ===================================
 
-This meta-runner allows you to get up and running with [GitVersion](https://github.com/Particular/GitVersion) inside of TeamCity without needing to install anything further on your server. It will automatically install GitVersion from Chocolatey after ensuring Chocolatey exists on that server (it installs Chocolatey for you if it's not already there).
+This meta-runner allows you to get up and running with [GitVersion](https://github.com/GitTools/GitVersion) inside of TeamCity without needing to install anything further on your server. It will automatically install GitVersion from Chocolatey after ensuring Chocolatey exists on that server (it installs Chocolatey for you if it's not already there).
 
-GitVersion is the easy way to use semantic versioning (semver.org) with Git. GitVersion uses your git repository branching conventions to determine the current [Semantic Version](http://semver.org/) of your application. It supports [GitFlow](https://github.com/Particular/GitVersion/wiki/GitFlow) and the much simpler [GitHubFlow](https://github.com/Particular/GitVersion/wiki/GitHubFlow) and might work with others (let us know).
+GitVersion is the easy way to use semantic versioning (semver.org) with Git. GitVersion uses your git repository branching conventions to determine the current [Semantic Version](http://semver.org/) of your application. It supports [GitFlow](http://gitversion.readthedocs.org/en/latest/git-branching-strategies/gitflow/) and the much simpler [GitHubFlow](http://gitversion.readthedocs.org/en/latest/git-branching-strategies/githubflow/) and can also be configured for others.
 
-![GitVersion in TeamCity](https://github.com/Particular/GitVersion/raw/master/Icons/README.png)
+![GitVersion in TeamCity](https://raw.github.com/GitTools/GitVersion/master/docs/img/README.png)
 
-See the [GitVersion repository](https://github.com/Particular/GitVersion) for more information.
+See the [GitVersion repository](https://github.com/GitTools/GitVersion) for more information.
 
 GitVersion Runner
 -----------------
@@ -30,7 +30,7 @@ The following options can be specified:
 * **Update AssemblyInfo Files:** Update any AssemblyInfo files while running the Executable or MSBuild file?
 * **Update GitVersion:** Use Chocolatey to check whether a new version of GitVersion is available
 
-For more information about these arguments please consult the [GitVersion Commandline Documentation](https://github.com/Particular/GitVersion/wiki/Command-Line-Tool).
+For more information about these arguments please consult the [GitVersion Commandline Documentation](http://gitversion.readthedocs.org/en/latest/usage/command-line/).
 
 Known Issues
 ------------
