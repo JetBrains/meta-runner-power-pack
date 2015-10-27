@@ -48,7 +48,7 @@ Param (
     [string] $xUnitNuget = "%xUnitNet.nugetSource%",
     [string] $xUnitExe = "%xUnitNet.executable%",
     [string] $dotCoverExecutable = "%teamcity.tool.dotCover%",
-    [boolean] $xunitLegacy = [boolean]"%xUnitNet.executable.legacymode%",
+    [boolean] $xunitLegacy = [System.Convert]::ToBoolean("%xUnitNet.executable.legacymode%"),
     [string] $assemblyFilter = "%xUnitNet.assembliesPath%",
     [string] $traits = "%xUnitNet.trait%",
     [string] $notraits = "%xUnitNet.notrait%",
