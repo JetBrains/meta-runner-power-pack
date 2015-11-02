@@ -21,7 +21,7 @@
     <build-runners>
       <runner name="" type="jetbrains_powershell">
         <parameters>
-          <param name="jetbrains_powershell_bitness" value="x64" />
+          <param name="jetbrains_powershell_bitness" value="x86" />
           <param name="jetbrains_powershell_errorToError" value="true" />
           <param name="jetbrains_powershell_execution" value="PS1" />
           <param name="jetbrains_powershell_script_code"><![CDATA[$SQDir = Join-Path ([Environment]::GetFolderPath("CommonApplicationData")) MSBuidSonarQube.%sqMsbuildVersion% 
