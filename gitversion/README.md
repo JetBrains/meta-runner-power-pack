@@ -28,6 +28,7 @@ The following options can be specified:
 * **MSBuild File:** Optional MSBuild file relative to the working directory to run using GitVersion - environment vars will be available to the process.
 * **MSBuild Arguments:** If an MSBuild file is specified then arguments to pass to MSBuild.
 * **Update AssemblyInfo Files:** Update any AssemblyInfo files while running the Executable or MSBuild file?
+* **Update AssemblyInfo File Name:** If Update AssemblyInfo Files is specified then name of AssemblyInfo file to update.
 * **Update GitVersion:** Use Chocolatey to check whether a new version of GitVersion is available
 
 For more information about these arguments please consult the [GitVersion Commandline Documentation](http://gitversion.readthedocs.org/en/latest/usage/command-line/).

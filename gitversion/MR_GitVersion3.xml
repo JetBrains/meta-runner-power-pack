@@ -18,6 +18,7 @@
       <param name="mr.GitVersion.proj" value="" spec="text description='Optional MSBuild file relative to the working directory to run using GitVersion - environment vars will be available to the process.' display='normal' label='MSBuild File:'" />
       <param name="mr.GitVersion.projArgs" value="" spec="text description='If an MSBuild file is specified then arguments to pass to MSBuild.' display='normal' label='MSBuild Arguments:'" />
       <param name="mr.GitVersion.updateAssemblyInfo" value="false" spec="checkbox checkedValue='true' description='Update any AssemblyInfo files while running the Executable or MSBuild file?' display='normal' label='Update AssemblyInfo Files:' uncheckedValue='false'" />
+      <param name="mr.GitVersion.updateAssemblyInfoFileName" value="" spec="text description='If Update AssemblyInfo Files is specified then name of AssemblyInfo file to update.' display='normal' label='Update AssemblyInfo File Name:'" />
       <param name="mr.GitVersion.updateGitVersion" value="false" spec="checkbox checkedValue='true' description='Use Chocolatey to check whether a new version of GitVersion is available?' display='normal' label='Update GitVersion:' uncheckedValue='false'" />
     </parameters>
     <build-runners>
@@ -47,6 +48,7 @@ Param (
     [string] $proj = '%mr.GitVersion.proj%',
     [string] $projArgs = '%mr.GitVersion.projArgs%',
     [string] $updateAssemblyInfo = '%mr.GitVersion.updateAssemblyInfo%',
+    [string] $updateAssemblyInfoFileName = '%mr.GitVersion.updateAssemblyInfoFileName%',
     [string] $updateGitVersion = '%mr.GitVersion.updateGitVersion%'
 )
 
@@ -100,7 +102,11 @@ function Build-Arguments() {
         $args = Append-IfSpecified $args "projargs" $projargs
     }
     if ($updateAssemblyInfo -eq "true") {
-        $args = "$args /UpdateAssemblyInfo true"
+        if (Test-IsSpecified $updateAssemblyInfoFileName) {
+            $args = "$args /UpdateAssemblyInfo $updateAssemblyInfoFileName"
+        } else {
+            $args = "$args /UpdateAssemblyInfo"
+        }
     }
     if ($output -eq "json" -and (Test-IsSpecified $outputFile)) {
         $args = "$args > ""$outputFile"""
@@ -118,7 +124,7 @@ try {
     } elseif (Test-Path (Join-Path ([Environment]::GetFolderPath("CommonApplicationData")) Chocolatey)) {
         $chocolateyDir = Join-Path ([Environment]::GetFolderPath("CommonApplicationData")) Chocolatey
     }
-    
+
     if ($chocolateyDir -eq $null) {
         Write-Host "##teamcity[progressMessage 'Chocolatey not installed; installing Chocolatey']"
         iex ((new-object net.webclient).DownloadString('https://chocolatey.org/install.ps1'))
@@ -135,9 +141,9 @@ try {
     if (-not (Test-Path $gitversion)) {
         $gitversion = Join-Path $chocolateyBinDir "gitversion.exe"
     }
-	
+
     $choco = Join-Path $chocolateyDir "choco.exe"
-	
+
     if (-not (Test-Path $gitversion)) {
         Write-Host "##teamcity[progressMessage 'GitVersion not installed; installing GitVersion']"
         iex "$choco install gitversion.portable -y"
@@ -157,20 +163,20 @@ try {
     } else {
         Write-Host "GitVersion will not be updated"
     }
-	
+
     $outputFile = Join-ToWorkingDirectoryIfSpecified $outputFile
     $logFile = Join-ToWorkingDirectoryIfSpecified $logFile
     $exec = Join-ToWorkingDirectoryIfSpecified $exec
     $proj = Join-ToWorkingDirectoryIfSpecified $proj
 
     $arguments = Build-Arguments
-    
+
     $safeArgs = $arguments.Replace("'", """")
-    
+
     if($password) {
       $safeArgs = $arguments.Replace($password, "*****")
     }
-    
+
     Write-Host "##teamcity[progressMessage 'Running: $gitversion $safeArgs']"
     iex "$gitversion $arguments"
     if ($LASTEXITCODE -ne 0) {
