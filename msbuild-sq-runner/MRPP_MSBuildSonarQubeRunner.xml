@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<meta-runner name="MSBuild SonarQube Runner">
+  <description>Execute MSBuild SonarQube Runner</description>
+  <settings>
+    <parameters>
+      <param name="additionalCommandLineArgs" value="" />
+      <param name="key" value="" />
+      <param name="name" value="" />
+      <param name="solutionName" value="" />
+      <param name="solutionPath" value="%teamcity.build.checkoutDir%" />
+      <param name="sonarhost" value="http://localhost:9000" />
+      <param name="sqMsbuildVersion" value="1.0.2" spec="text description='define the version that is found in the donwnload page' label='sqMsbuildVersion' display='normal'" />
+      <param name="system.NunitRunnerTaskEnabled" value="true" spec="text description='enables tests' label='test' display='hidden'" />
+      <param name="system.ProduceCoverage" value="true" spec="text description='enables coverage' label='coverage' display='hidden'" />
+      <param name="userName" value="" />
+      <param name="userPassword" value="" spec="password description='pass' label='pass' display='normal'" />
+      <param name="version" value="work" />
+      <param name="msbuildVersion" value="14.0" spec="select description='MSBuild Version to Use' data_2='12.0' data_1='14.0' display='normal' label='msbuildVersion' data_4='10.0' data_3='11.0'" />
+      <param name="visualStudioVersion" value="vs2015" spec="select description='Visual Studio Version to Use' data_2='vs2013' data_1='vs2015' display='normal' label='visualStudioVersion' data_4='vs2010' data_3='vs2012'" />
+    </parameters>
+    <build-runners>
+      <runner name="" type="jetbrains_powershell">
+        <parameters>
+          <param name="jetbrains_powershell_bitness" value="x86" />
+          <param name="jetbrains_powershell_errorToError" value="true" />
+          <param name="jetbrains_powershell_execution" value="PS1" />
+          <param name="jetbrains_powershell_script_code"><![CDATA[$SQDir = Join-Path ([Environment]::GetFolderPath("CommonApplicationData")) MSBuidSonarQube.%sqMsbuildVersion% 
+$SQExecutor = Join-Path $SQDir MSBuild.SonarQube.Runner.exe
+$downloadUrl = "https://github.com/SonarSource/sonar-msbuild-runner/releases/download/%sqMsbuildVersion%/MSBuild.SonarQube.Runner-%sqMsbuildVersion%.zip"
+$tempZipFile = "%teamcity.build.checkoutDir%/MSBuild.SonarQube.Runner.zip"
+
+Write-Host "##teamcity[setParameter name='SQExecutor' value='$SQExecutor']"
+
+If (Test-Path $SQDir){
+Write-Host "##teamcity[progressMessage 'Skip Installation:  MSBuild Runner Already installed']"
+}Else{
+
+Write-Host "##teamcity[progressMessage 'Download SQ MSBuild Runner']"
+(new-object net.webclient).DownloadFile($downloadUrl, $tempZipFile)
+
+#Load the assembly
+[System.Reflection.Assembly]::LoadWithPartialName("System.IO.Compression.FileSystem") | Out-Null
+#Unzip the file
+[System.IO.Compression.ZipFile]::ExtractToDirectory($tempZipFile, $SQDir)
+
+Write-Host "##teamcity[progressMessage 'SQ Installed: Ok']"
+}]]></param>
+          <param name="jetbrains_powershell_script_mode" value="CODE" />
+          <param name="teamcity.step.mode" value="default" />
+        </parameters>
+      </runner>
+      <runner name="" type="jb.nuget.installer">
+        <parameters>
+          <param name="nuget.path" value="?NuGet.CommandLine.DEFAULT.nupkg" />
+          <param name="nuget.updatePackages.mode" value="perConfig" />
+          <param name="nuget.use.restore" value="restore" />
+          <param name="nugetCustomPath" value="?NuGet.CommandLine.DEFAULT.nupkg" />
+          <param name="nugetPathSelector" value="?NuGet.CommandLine.DEFAULT.nupkg" />
+          <param name="sln.path" value="%solutionPath%\%solutionName%" />
+          <param name="teamcity.step.mode" value="default" />
+        </parameters>
+      </runner>
+      <runner name="Begin Phase" type="simpleRunner">
+        <parameters>
+          <param name="command.executable" value="C:\ProgramData\MSBuidSonarQube.%sqMsbuildVersion%\MSBuild.SonarQube.Runner.exe" />
+          <param name="command.parameters" value="begin /k:%key% /n:%name% /v:%version% /d:sonar.cs.opencover.reportsPaths=%teamcity.build.checkoutDir%\*.coverage.xml /d:sonar.cs.nunit.reportsPaths=%teamcity.build.checkoutDir%\*.unittest.report.xml /d:sonar.host.url=%sonarhost% /d:sonar.fs.opencover.reportsPaths=%teamcity.build.checkoutDir%\*.coverage.xml /d:sonar.fs.nunit.reportsPaths=%teamcity.build.checkoutDir%\*.unittest.report.xml /d:sonar.verbose=true  /d:sonar.login=%userName% /d:sonar.password=%userPassword% %additionalCommandLineArgs%" />
+          <param name="teamcity.build.workingDir" value="%solutionPath%" />
+          <param name="teamcity.step.mode" value="default" />
+        </parameters>
+      </runner>
+      <runner name="Build Project" type="VS.Solution">
+        <parameters>
+          <param name="build-file-path" value="%solutionPath%\%solutionName%" />
+          <param name="msbuild.prop.Configuration" value="Release" />
+          <param name="msbuild_version" value="%msbuildVersion%" />
+          <param name="run-platform" value="x64" />
+          <param name="targets" value="Rebuild" />
+          <param name="teamcity.step.mode" value="default" />
+          <param name="toolsVersion" value="%msbuildVersion%" />
+          <param name="vs.version" value="%visualStudioVersion%" />
+        </parameters>
+      </runner>
+      <runner name="End Phase" type="simpleRunner">
+        <parameters>
+          <param name="command.executable" value="C:\ProgramData\MSBuidSonarQube.%sqMsbuildVersion%\MSBuild.SonarQube.Runner.exe" />
+          <param name="command.parameters" value="end" />
+          <param name="teamcity.build.workingDir" value="%solutionPath%" />
+          <param name="teamcity.step.mode" value="default" />
+        </parameters>
+      </runner>
+    </build-runners>
+    <requirements />
+  </settings>
+</meta-runner>
+
