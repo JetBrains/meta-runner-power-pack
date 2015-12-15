@@ -75,7 +75,15 @@ try {
 	
   ## Search for the assemblies using wildcard pattern
   $assemblies = (Get-ChildItem $assemblyFilter -Recurse | select -ExpandProperty FullName)
-  Write-Host "Found test assemblies: " $assemblies
+  if($assemblies -eq $null)
+  {
+    Write-Host "No test assemblies found"
+    return
+  }
+  else
+  {
+    Write-Host "Found test assemblies: " $assemblies
+  }
   
   ## create single-line correctly formatted xunit argument 
   # split multi-line xunit args into single line and correctly format
