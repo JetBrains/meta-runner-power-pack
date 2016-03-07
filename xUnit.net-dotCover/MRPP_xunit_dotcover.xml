@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<meta-runner name="xUnit.net + dotCover 💕2">
+<meta-runner name="xUnit.net + dotCover 💕">
   <description>Run xUnit.net tests with dotCover coverage: http://www.wwwlicious.com/2015/09/25/teamcity-dotcover-xunit-at-last/</description>
   <settings>
     <parameters>
       <param name="xUnitNet.nugetSource" value="http://www.nuget.org/api/v2/" spec="text description='The nuget source url for the xunit runner' display='normal' label='Xunit Runner Nuget Source'" />
-      <param name="xUnitNet.nugetExe" value="%teamcity.tool.NuGet.CommandLine.DEFAULT.nupkg%" spec="text description='The path to the nuget package on the agent' display='normal' label='Nuget Package Path'" />
+      <param name="xUnitNet.nugetExe" value="%teamcity.tool.NuGet.CommandLine.DEFAULT%" spec="text description='The path to the nuget package on the agent' display='normal' label='Nuget Package Path'" />
       <param name="xUnitNet.executable" value="xunit.console.exe" spec="text description='The xunit runner executable to use in the nuget package' display='normal' label='Xunit Runner Executable'" />
       <param name="xUnitNet.executable.args" value="" spec="text description='Custom xunit runner arguments' display='normal' label='Xunit Runner Executable additional arguments'" />
       <param name="xUnitNet.executable.legacymode" value="false" spec="checkbox checkedValue='true' description='For mixed mode assemblies, enables xunit runner to use legacy activiation' uncheckedValue='false' label='Enable .Net V2 Legacy Activation' display='normal'" />
