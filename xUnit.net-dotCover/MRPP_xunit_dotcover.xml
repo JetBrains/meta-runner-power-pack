@@ -1,15 +1,17 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<meta-runner name="xUnit.net + dotCover 💕">
+<meta-runner name="xUnit.net + dotCover 💕2">
   <description>Run xUnit.net tests with dotCover coverage: http://www.wwwlicious.com/2015/09/25/teamcity-dotcover-xunit-at-last/</description>
   <settings>
     <parameters>
       <param name="xUnitNet.nugetSource" value="http://www.nuget.org/api/v2/" spec="text description='The nuget source url for the xunit runner' display='normal' label='Xunit Runner Nuget Source'" />
+      <param name="xUnitNet.nugetExe" value="%teamcity.tool.NuGet.CommandLine.DEFAULT.nupkg%" spec="text description='The path to the nuget package on the agent' display='normal' label='Nuget Package Path'" />
       <param name="xUnitNet.executable" value="xunit.console.exe" spec="text description='The xunit runner executable to use in the nuget package' display='normal' label='Xunit Runner Executable'" />
       <param name="xUnitNet.executable.args" value="" spec="text description='Custom xunit runner arguments' display='normal' label='Xunit Runner Executable additional arguments'" />
       <param name="xUnitNet.executable.legacymode" value="false" spec="checkbox checkedValue='true' description='For mixed mode assemblies, enables xunit runner to use legacy activiation' uncheckedValue='false' label='Enable .Net V2 Legacy Activation' display='normal'" />
       <param name="xUnitNet.assembliesPath" value="*/bin/*tests.dll" spec="text description='The assemblies to test; relative to the working directory. Asterix wildcard (*) is supported here' display='normal' label='Assemblies to test:'" />
       <param name="xUnitNet.trait" value="" spec="text description='only run tests with matching name/value traits, one name=value per line (e.x. name=value)' validationMode='any' label='Include Traits' display='normal'" />
       <param name="xUnitNet.notrait" value="Category=Integration" spec="text description='do not run tests with matching name/value traits, one name=value per line (e.x. name=value)' validationMode='any' label='Exclude Traits' display='normal'" />
+      <param name="xUnitNet.dotCover.enable" value="true" spec="checkbox checkedValue='true' description='Enables or disables running test coverage with dotCover' uncheckedValue='false' label='Enable dotCover coverage' display='normal'" />
       <param name="xUnitNet.dotCover.Filters" spec="text description='Specifies coverage filters using the config format. Documentation http://www.jetbrains.com/dotcover/help/dotCover__Console_Runner_Commands.html' label='dotCover Filters' validationMode='any' display='normal'"><![CDATA[<!-- Coverage filters. It's possible to use asterisks as wildcard symbols. -->
 <Filters>
   <IncludeFilters>
@@ -31,6 +33,9 @@
   <AttributeFilterEntry>System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverageAttribute</AttributeFilterEntry>
   <AttributeFilterEntry>System.ObsoleteAttribute</AttributeFilterEntry>
 </AttributeFilters>]]></param>
+      <param name="xUnitNet.dotCover.exportReport" value="false" spec="checkbox checkedValue='true' description='If enabled, it will add a report to the build artifacts' uncheckedValue='false' label='Export dotCover report' display='normal'" />
+      <param name="xUnitNet.dotCover.reportType" value="html" spec="select display='normal' description='The dotCover report type' label='ReportType' data_2='JSON' data_1='HTML' data_4='NDependXML' data_3='XML'" />
+      <param name="xUnitNet.dotCover.reportOutputFile" value="dotCoverReport.html" spec="text description='the name of the report file to output' validationMode='any' label='Report FileName' display='normal'" />
     </parameters>
     <build-runners>
       <runner name="Install Test runner, Create config, Run tests, Update coverage" type="jetbrains_powershell">
@@ -44,7 +49,7 @@
           <param name="jetbrains_powershell_script_code"><![CDATA[[CmdletBinding()]
 Param (
     [string] $workingDir = "%teamcity.build.workingDir%",
-    [string] $nugetExe = "%teamcity.tool.NuGet.CommandLine.DEFAULT.nupkg%\tools\nuget.exe",
+    [string] $nugetExe = "%xUnitNet.nugetExe%\tools\nuget.exe",
     [string] $xUnitNuget = "%xUnitNet.nugetSource%",
     [string] $xUnitExe = "%xUnitNet.executable%",
     [string] $dotCoverExecutable = "%teamcity.tool.dotCover%",
@@ -52,6 +57,10 @@ Param (
     [string] $assemblyFilter = "%xUnitNet.assembliesPath%",
     [string] $traits = "%xUnitNet.trait%",
     [string] $notraits = "%xUnitNet.notrait%",
+    [boolean] $dotCoverEnabled = [System.Convert]::ToBoolean("%xUnitNet.dotCover.enable%"),
+    [boolean] $dotCoverReportEnabled = [System.Convert]::ToBoolean("%xUnitNet.dotCover.exportReport%"),
+    [string] $dotCoverReportType = "%xUnitNet.dotCover.reportType%",
+    [string] $dotCoverReportFile = "%xUnitNet.dotCover.reportOutputFile%",
     [string] $dotCoverFilter = "%xUnitNet.dotCover.Filters%",
     [string] $dotCoverAttributeFilter = "%xUnitNet.dotCover.AttributeFilters%",
     [string] $xunitArgs = "%xUnitNet.executable.args%"
@@ -62,18 +71,19 @@ $ErrorActionPreference = "Stop"
 try {
 
 	## get xunit runner from nuget package feed
-	iex "$nugetExe install xunit.runner.console -source $xUnitNuget"
+  iex "$nugetExe install xunit.runner.console -source $xUnitNuget"
 	$xunit = Join-Path $workingDir "xunit.runner.console.*\tools\$xUnitExe" | Resolve-Path
 	
   ## modify runner config if legacy v2 runtime activation mode required
 	If($xunitLegacy) {
+    Write-Host "Setting xunit to run with legacy activation policy"
 		$config = [string]$xunit + ".config"
 		$doc = (Get-Content $config) -as [Xml]
 		$doc.configuration.startup.SetAttribute("useLegacyV2RuntimeActivationPolicy", "true")
 		$doc.Save($config)
   }
 	
-  ## Search for the assemblies using wildcard pattern
+   ## Search for the assemblies using wildcard pattern
   $assemblies = (Get-ChildItem $assemblyFilter -Recurse | select -ExpandProperty FullName)
 
   if($assemblies -eq $null)
@@ -109,7 +119,11 @@ try {
   $settingsFileName = "coverage_settings.xml"
   $coverageLogFileName = "dotCoverXunitLog.txt"
   
-  ## genrate coverage settings file
+  Write-Host "##teamcity[message text='Run test coverage:  $dotCoverEnabled']"
+  
+  ## do we run coverage?
+  If($dotCoverEnabled) {
+  ## generate coverage settings file
   $settingsXml = @"
 <?xml version="1.0" encoding="utf-8"?>
 <CoverageParams>
@@ -124,7 +138,7 @@ try {
   # Avoid BOM http://stackoverflow.com/questions/5596982/using-powershell-to-write-a-file-in-utf-8-without-the-bom
   $settingsXml | Out-File $settingsFileName -Encoding ASCII
   
-  ## Run coverage
+  ## Run coverage  
   $dotCover = Join-Path $dotCoverExecutable "dotCover.exe"
   $dotCoverArgs = " cover " + $settingsFileName + " /LogFile=$coverageLogFileName /ReturnTargetExitCode"
   Write-Host "##teamcity[message text='dotCoverExecutable: $dotCoverExecutable']"
@@ -137,7 +151,17 @@ try {
   write-host "##teamcity[publishArtifacts '$settingsFileName']"
   write-host "##teamcity[publishArtifacts '$coverageLogFileName']"
   write-host "##teamcity[publishArtifacts '$outputFile']"
-    
+  
+    ## Optional generate report
+    If($dotCoverReportEnabled) {
+      iex "$dotCover report /source=$outputFile /output=$dotCoverReportFile /reportType=$dotCoverReportType"
+      write-host "##teamcity[publishArtifacts '$dotCoverReportFile']"
+    }
+  
+  } Else {
+      ## run xunit without coverage
+      iex "$xunit $xunitArg"
+  }
 }
 catch {
   
