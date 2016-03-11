@@ -17,9 +17,10 @@ What it does
  
 * downloads the latest available console runner from a local or remote nuget feed
 * uses wildcard searching to find and run xUnit.net tests
-* provides dotCover coverage reporting and statistics back to Teamcity.
+* (Optional) provides dotCover coverage reporting and statistics back to Teamcity.
 * return error codes to fail builds.
 * Supports both xUnit.net v1.x and v2.x test assemblies.
+* (Optional) generates dotCover report
 
 Artifacts
 ---------
@@ -29,6 +30,7 @@ The following files are published as build artifacts by this runner
 * dotCover configuration xml
 * dotCover logs
 * coverage files (*.dcvr)
+* dotCover Report (html, json, xml, ndependxml)
 
 Configuration Option Defaults*
 -----------------------------
