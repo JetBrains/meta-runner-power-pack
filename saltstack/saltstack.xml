@@ -9,7 +9,10 @@
       <param name="system.SALTEAUTH" value="ldap" spec="text description='Enter the auth type for the users specified.  Examples: |'ldap|' or |'pam|'' label='Salt auth type' validationMode='not_empty' display='normal'" />
       <param name="system.SALTEXPRFORM" value="grain" spec="text description='The target expression type.  Examples: |'glob|', |'grain|', |'list|', |'pillar|',  See salt docs for more.' label='Salt expression form' validationMode='not_empty' display='normal'" />
       <param name="system.SALTFUNCTION" value="state.sls" spec="text description='The salt module to execute.  Example: state.sls https://docs.saltstack.com/en/latest/ref/modules/all/' label='Salt moedul function' validationMode='not_empty' display='normal'" />
+      <param name="system.SALTKWARGS" value="" spec="text description='Extra arguments' label='kwargs' display='normal'" />
       <param name="system.SALTPASSWORD" value="" spec="password description='Password for the saltstack user' label='Salt user password' display='normal'" />
+      <param name="system.SALTSTATEOUTPUT" value="" spec="text description='Only supported option is changes, which will only output state output that has changed' label='state-output' display='normal'" />
+      <param name="system.SALTSUBSET" value="" spec="text description='Pick a random number of minions from this parameter from the target' label='subset' display='normal'" />
       <param name="system.SALTTARGET" value="" spec="text description='Select which minions should be targeted.  Be certain to follow the format selected for SALTEXPRFORM.  Example: |'grain:value|'  if expr_form is grain' label='Minion target' validationMode='not_empty' display='normal'" />
       <param name="system.SALTURL" value="https://salt-master:8000" spec="text description='The http url to the salt master: Example: https://192.168.1.1:8000' label='Salt master url' validationMode='not_empty' display='normal'" />
       <param name="system.SALTUSERNAME" value="" spec="text description='The username for the salt user.  User must have permission to the module as specified under external_auth in the salt master config.' label='Salt username' validationMode='not_empty' display='normal'" />
@@ -24,13 +27,13 @@
 '''
 Send a message to a SaltStack API
 '''
-import urllib2, urllib, json, ssl, sys, yaml
+import urllib2, urllib, json, ssl, sys, yaml, copy
 
 def __init__():
 	'''
 	Set gloval vars.  These are replaced with env variables from TeamCity
 	'''
-	global saltclient, salturl, eauth, username, password, batch, target, expr_form, function, arguments, batch_size
+	global saltclient, salturl, eauth, username, password, batch, target, expr_form, function, arguments, batch_size, subset, kwargs, state_output
 	saltclient = '%system.SALTCLIENT%'
 	salturl = '%system.SALTURL%'
 	eauth = '%system.SALTEAUTH%'
@@ -41,6 +44,12 @@ def __init__():
 	function = '%system.SALTFUNCTION%'
 	arguments = '%system.SALTARGUMENTS%'
 	batch_size = '%system.SALTBATCHSIZE%'
+	subset = '%system.SALTSUBSET%'
+	kwargs = '%system.SALTKWARGS%'
+	state_output = '%system.SALTSTATEOUTPUT%'
+
+	if batch_size and subset:
+		raise SystemExit('SALTBATCHSIZE and SALTSUBSET cannot be used together.  Erase one of them please')
 
 def local_client():
 	'''
@@ -53,11 +62,16 @@ def local_client():
 		'client': 'local',
 		'fun': function,
 	}
+	if kwargs:
+		args.update(dict(kwarg.split("=") for kwarg in kwargs.split(" ")))
 	if arguments:
-		args['arg'] = arguments
+		args['arg'] = arguments.split(" ")
 	if batch_size:
 		args['batch'] = batch_size
 		args['client'] = 'local_batch'
+	if subset:
+		args['sub'] = subset
+		args['client'] = 'local_subset'
 	return exec_rest_call(args)
 
 def exec_rest_call(args):
@@ -67,25 +81,35 @@ def exec_rest_call(args):
 	#Login and get a token
 	token = get_token()
 
-	headers = { 'X-Auth-Token' : token, 'Accept' : 'application/x-yaml' }
-	data = urllib.urlencode(args)
-	request = urllib2.Request(salturl, data=data, headers=headers)
+	headers = { 'X-Auth-Token' : token, 'Accept' : 'application/json', 'Content-Type' : 'application/json' }
+	data = json.dumps(args)
+	if sys.version_info <= (2,7,9):
+		gcontext = ''
+	else:
+		gcontext = ssl.SSLContext(ssl.PROTOCOL_TLSv1)
+	request = urllib2.Request(salturl, data, headers=headers)
 
 	try: 
-		return urllib2.urlopen(request).read()
-        except urllib2.HTTPError, e:
-                print("Error in API Call: " + e.read())
+		d = urllib2.urlopen(request, context=gcontext).read()
+	except urllib2.HTTPError, e:
+		print("Error in API Call: " + e.read())
 		sys.exit(1)
-        except urllib2.URLError, e:
-                print("Error in API Call: " + str(e.reason))
+	except urllib2.URLError, e:
+		print("Error in API Call: " + str(e.reason))
 		sys.exit(1)
-        except httplib.HTTPException, e:
-                print("Error in API Call: socket error")
+	except httplib.HTTPException, e:
+		print("Error in API Call: socket error")
 		sys.exit(1)
-        except: 
-                print("Error Getting in API Call")
+	except: 
+		print("Error Getting in API Call")
 		sys.exit(1)
 
+	#print("Raw Return:" +d)
+	try:
+		return json.loads(d)
+	except:
+		print("Return data is not JSON")
+		sys.exit(1)
 def get_token():
 	'''
 	Login and get a auth token from the salt master
@@ -96,9 +120,13 @@ def get_token():
 		'password': password,
 		'eauth': eauth
 	})
+	if sys.version_info <= (2,7,9):
+		gcontext = ''
+	else:
+		gcontext = ssl.SSLContext(ssl.PROTOCOL_TLSv1)
 
 	try:
-		auth = urllib2.urlopen(url, params).read()
+		auth = urllib2.urlopen(url, params, context=gcontext).read()
 		return json.loads(auth)['return'][0]['token']
 	except urllib2.HTTPError, e:
 		print("Error Getting Token: " + e.read())
@@ -113,39 +141,84 @@ def get_token():
 		print("Error Getting Token")
 		sys.exit(1)
 
+def normalize_batch(results):
+	'''
+	Data is returned in different structure when in batch mode: https://github.com/saltstack/salt/issues/32459
+	Make these results the same shape as non-batch returns here
+	'''
+	e = {"return": [{}]}
+	for value in results['return']:
+		e['return'][0].update(value)
+	return e
+
 def valid_return(return_data):
-        '''
-        Check the return data for any failures.  Since every salt module returns data in a different manner this will be hard to do accurately.
-        1.  If the function is a state.appply, state.sls or state.highstate return true only if all state id's return true
-        2.  For any other function look for a return of true
-        *.  Otherwise return false
-        '''
-        try:
-                d = yaml.load(return_data)
-        except:
-                print("Return data is not YAML")
-                sys.exit(1)
+	'''
+	Check the return data for any failures.  Since every salt module returns data in a different manner this will be hard to do accurately.
+	1.  If the function is a state.appply, state.sls or state.highstate return true only if all state id's return true
+	2.  For any other function look for a return of true
+	*.  Otherwise return false
+	'''
 
-        failure = 0
-        if function.startswith('state'):
-                for minion, data in d['return'][0].iteritems():
-                        for state, results in data.iteritems():
-                                if results['result'] == False:
-                                        failure = 1
-        else:
-                for minion, data in d['return'][0].iteritems():
-                        if data == False:
-                                failure = 1
+	failure = 0
+	if function.startswith('state'):
+		for minion, data in return_data['return'][0].iteritems():
+			if type(data) is not dict:
+				failure = 1
+			else:
+				for state, results in data.iteritems():
+					if results['result'] == False:
+						failure = 1
+	else:
+		for minion, data in return_data['return'][0].iteritems():
+			if data == False:
+				failure = 1
 
-        return(failure)
+	return(failure)
 
+def print_output(results):
+	'''
+	Print api query results here.
+	'''
+	# Some Color
+	HEADER = '\033[95m'
+	WARNING = '\033[93m'
+	OK = '\033[92m'
+	CHANGE = '\033[94m'
+	FAIL = '\033[91m'
+	ENDC = '\033[0m'
+
+	if state_output == "changes":
+		print(WARNING+"Displaying Changes Only"+ENDC)
+
+	if function.startswith('state'):
+		if batch_size:
+			results = normalize_batch(results)
+		for minion, data in results['return'][0].iteritems():
+			print(HEADER+minion+ENDC+":")
+			if type(data) is not dict:
+				print("{0}{1}{2}".format(FAIL, data, ENDC))
+			else:
+				for state, results in data.iteritems():
+					if state_output == "changes" and results['changes'] == {} and results['result'] != False: continue
+					print("----------")
+					if results['result'] == False: C = FAIL
+					elif results['result'] == True and results['changes'] == {}: C = OK
+					elif results['result'] == True and results['changes'] != {}: C = CHANGE
+					else: C = WARNING
+					print("  "+C+state+ENDC+":")
+					for results_key, results_value in results.iteritems():
+						print("    "+C+results_key+": "+str(results_value)+ENDC)
+
+	else:
+		print(yaml.safe_dump(results))
 
 __init__()
 
 if saltclient == 'local':
-        results = local_client()
-        print(results)
-        sys.exit(valid_return(results))]]></param>
+	results = local_client()
+	print_output(results)
+	sys.exit(valid_return(results))
+]]></param>
           <param name="python-script-mode" value="code" />
           <param name="python-ver" value="*" />
           <param name="teamcity.step.mode" value="default" />
