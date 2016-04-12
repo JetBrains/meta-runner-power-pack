@@ -12,6 +12,17 @@ Requirements
 * Nuget to be [configured on the TeamCity server](https://confluence.jetbrains.com/display/TCD9/NuGet).
 * A [local or remote nuget feed](https://docs.nuget.org/create/hosting-your-own-nuget-feeds) accessible by all build agent servers containing the xunit console runner package.
  
+Installation
+------------
+
+* In the TeamCity UI: Administration > Projects > Edit (project item) > Meta-Runners > Upload Meta-Runner
+* Download [MRPP_xunit_dotcover.xml](https://raw.githubusercontent.com/JetBrains/meta-runner-power-pack/master/xUnit.net-dotCover/MRPP_xunit_dotcover.xml) ( <- right click and save this link)
+* Browse for the xml file just downloaded
+* Give it a name like "xunit.xml" if one isn't added for you
+* Click Save
+
+Now when adding a build step you can choose the new `xUnit.net + dotCover 💕` runner from the bottom of the list.
+
 What it does
 ------------
  
