@@ -19,3 +19,8 @@ From teamcity select a project (select <Root project> to make available to all p
 Administration > Meta-Runners > Upload Meta-Runner
 
 Upload saltstack.xml
+
+Example
+=======
+
+.. image:: images/saltstack-example.png
