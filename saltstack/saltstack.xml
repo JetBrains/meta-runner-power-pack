@@ -30,194 +30,194 @@ Send a message to a SaltStack API
 import urllib2, urllib, json, ssl, sys, yaml, copy
 
 def __init__():
-	'''
-	Set gloval vars.  These are replaced with env variables from TeamCity
-	'''
-	global saltclient, salturl, eauth, username, password, batch, target, expr_form, function, arguments, batch_size, subset, kwargs, state_output
-	saltclient = '%system.SALTCLIENT%'
-	salturl = '%system.SALTURL%'
-	eauth = '%system.SALTEAUTH%'
-	username = '%system.SALTUSERNAME%'
-	password = '%system.SALTPASSWORD%'
-	target = '%system.SALTTARGET%'
-	expr_form = '%system.SALTEXPRFORM%'
-	function = '%system.SALTFUNCTION%'
-	arguments = '%system.SALTARGUMENTS%'
-	batch_size = '%system.SALTBATCHSIZE%'
-	subset = '%system.SALTSUBSET%'
-	kwargs = '%system.SALTKWARGS%'
-	state_output = '%system.SALTSTATEOUTPUT%'
+    '''
+    Set gloval vars.  These are replaced with env variables from TeamCity
+    '''
+    global saltclient, salturl, eauth, username, password, batch, target, expr_form, function, arguments, batch_size, subset, kwargs, state_output
+    saltclient = '%system.SALTCLIENT%'
+    salturl = '%system.SALTURL%'
+    eauth = '%system.SALTEAUTH%'
+    username = '%system.SALTUSERNAME%'
+    password = '%system.SALTPASSWORD%'
+    target = '%system.SALTTARGET%'
+    expr_form = '%system.SALTEXPRFORM%'
+    function = '%system.SALTFUNCTION%'
+    arguments = '%system.SALTARGUMENTS%'
+    batch_size = '%system.SALTBATCHSIZE%'
+    subset = '%system.SALTSUBSET%'
+    kwargs = '%system.SALTKWARGS%'
+    state_output = '%system.SALTSTATEOUTPUT%'
 
-	if batch_size and subset:
-		raise SystemExit('SALTBATCHSIZE and SALTSUBSET cannot be used together.  Erase one of them please')
+    if batch_size and subset:
+        raise SystemExit('SALTBATCHSIZE and SALTSUBSET cannot be used together.  Erase one of them please')
 
 def local_client():
-	'''
-	This will run a normal salt command using the saltstack localclient.
-	Example: salt 'minion' some.module
-	'''
-	args = {
-		'tgt': target,
-		'expr_form': expr_form,
-		'client': 'local',
-		'fun': function,
-	}
-	if kwargs:
-		args.update(dict(kwarg.split("=") for kwarg in kwargs.split(" ")))
-	if arguments:
-		args['arg'] = arguments.split(" ")
-	if batch_size:
-		args['batch'] = batch_size
-		args['client'] = 'local_batch'
-	if subset:
-		args['sub'] = subset
-		args['client'] = 'local_subset'
-	return exec_rest_call(args)
+    '''
+    This will run a normal salt command using the saltstack localclient.
+    Example: salt 'minion' some.module
+    '''
+    args = {
+        'tgt': target,
+        'expr_form': expr_form,
+        'client': 'local',
+        'fun': function,
+    }
+    if kwargs:
+        args.update(dict(kwarg.split("=") for kwarg in kwargs.split(" ")))
+    if arguments:
+        args['arg'] = arguments.split(" ")
+    if batch_size:
+        args['batch'] = batch_size
+        args['client'] = 'local_batch'
+    if subset:
+        args['sub'] = subset
+        args['client'] = 'local_subset'
+    return exec_rest_call(args)
 
 def exec_rest_call(args):
-	'''
-	Execute the restful call to the saltmaster
-	'''
-	#Login and get a token
-	token = get_token()
+    '''
+    Execute the restful call to the saltmaster
+    '''
+    #Login and get a token
+    token = get_token()
 
-	headers = { 'X-Auth-Token' : token, 'Accept' : 'application/json', 'Content-Type' : 'application/json' }
-	data = json.dumps(args)
-	if sys.version_info <= (2,7,9):
-		gcontext = ''
-	else:
-		gcontext = ssl.SSLContext(ssl.PROTOCOL_TLSv1)
-	request = urllib2.Request(salturl, data, headers=headers)
+    headers = { 'X-Auth-Token' : token, 'Accept' : 'application/json', 'Content-Type' : 'application/json' }
+    data = json.dumps(args)
+    if sys.version_info <= (2,7,9):
+        gcontext = ''
+    else:
+        gcontext = ssl.SSLContext(ssl.PROTOCOL_TLSv1)
+    request = urllib2.Request(salturl, data, headers=headers)
 
-	try: 
-		d = urllib2.urlopen(request, context=gcontext).read()
-	except urllib2.HTTPError, e:
-		print("Error in API Call: " + e.read())
-		sys.exit(1)
-	except urllib2.URLError, e:
-		print("Error in API Call: " + str(e.reason))
-		sys.exit(1)
-	except httplib.HTTPException, e:
-		print("Error in API Call: socket error")
-		sys.exit(1)
-	except: 
-		print("Error Getting in API Call")
-		sys.exit(1)
+    try: 
+        d = urllib2.urlopen(request, context=gcontext).read()
+    except urllib2.HTTPError, e:
+        print("Error in API Call: " + e.read())
+        sys.exit(1)
+    except urllib2.URLError, e:
+        print("Error in API Call: " + str(e.reason))
+        sys.exit(1)
+    except httplib.HTTPException, e:
+        print("Error in API Call: socket error")
+        sys.exit(1)
+    except: 
+        print("Error Getting in API Call")
+        sys.exit(1)
 
-	#print("Raw Return:" +d)
-	try:
-		return json.loads(d)
-	except:
-		print("Return data is not JSON")
-		sys.exit(1)
+    #print("Raw Return:" +d)
+    try:
+        return json.loads(d)
+    except:
+        print("Return data is not JSON")
+        sys.exit(1)
 def get_token():
-	'''
-	Login and get a auth token from the salt master
-	'''
-	url = salturl + '/login'
-	params = urllib.urlencode({
-		'username': username,
-		'password': password,
-		'eauth': eauth
-	})
-	if sys.version_info <= (2,7,9):
-		gcontext = ''
-	else:
-		gcontext = ssl.SSLContext(ssl.PROTOCOL_TLSv1)
+    '''
+    Login and get a auth token from the salt master
+    '''
+    url = salturl + '/login'
+    params = urllib.urlencode({
+        'username': username,
+        'password': password,
+        'eauth': eauth
+    })
+    if sys.version_info <= (2,7,9):
+        gcontext = ''
+    else:
+        gcontext = ssl.SSLContext(ssl.PROTOCOL_TLSv1)
 
-	try:
-		auth = urllib2.urlopen(url, params, context=gcontext).read()
-		return json.loads(auth)['return'][0]['token']
-	except urllib2.HTTPError, e:
-		print("Error Getting Token: " + e.read())
-		sys.exit(1)
-	except urllib2.URLError, e:
-		print("Error Getting Token: " + str(e.reason))
-		sys.exit(1)
-	except httplib.HTTPException, e:
-		print("Error Getting Token: socket error")
-		sys.exit(1)
-	except:
-		print("Error Getting Token")
-		sys.exit(1)
+    try:
+        auth = urllib2.urlopen(url, params, context=gcontext).read()
+        return json.loads(auth)['return'][0]['token']
+    except urllib2.HTTPError, e:
+        print("Error Getting Token: " + e.read())
+        sys.exit(1)
+    except urllib2.URLError, e:
+        print("Error Getting Token: " + str(e.reason))
+        sys.exit(1)
+    except httplib.HTTPException, e:
+        print("Error Getting Token: socket error")
+        sys.exit(1)
+    except:
+        print("Error Getting Token")
+        sys.exit(1)
 
 def normalize_batch(results):
-	'''
-	Data is returned in different structure when in batch mode: https://github.com/saltstack/salt/issues/32459
-	Make these results the same shape as non-batch returns here
-	'''
-	e = {"return": [{}]}
-	for value in results['return']:
-		e['return'][0].update(value)
-	return e
+    '''
+    Data is returned in different structure when in batch mode: https://github.com/saltstack/salt/issues/32459
+    Make these results the same shape as non-batch returns here
+    '''
+    e = {"return": [{}]}
+    for value in results['return']:
+        e['return'][0].update(value)
+    return e
 
 def valid_return(return_data):
-	'''
-	Check the return data for any failures.  Since every salt module returns data in a different manner this will be hard to do accurately.
-	1.  If the function is a state.appply, state.sls or state.highstate return true only if all state id's return true
-	2.  For any other function look for a return of true
-	*.  Otherwise return false
-	'''
+    '''
+    Check the return data for any failures.  Since every salt module returns data in a different manner this will be hard to do accurately.
+    1.  If the function is a state.appply, state.sls or state.highstate return true only if all state id's return true
+    2.  For any other function look for a return of true
+    *.  Otherwise return false
+    '''
 
-	failure = 0
-	if function.startswith('state'):
-		for minion, data in return_data['return'][0].iteritems():
-			if type(data) is not dict:
-				failure = 1
-			else:
-				for state, results in data.iteritems():
-					if results['result'] == False:
-						failure = 1
-	else:
-		for minion, data in return_data['return'][0].iteritems():
-			if data == False:
-				failure = 1
+    failure = 0
+    if function.startswith('state'):
+        for minion, data in return_data['return'][0].iteritems():
+            if type(data) is not dict:
+                failure = 1
+            else:
+                for state, results in data.iteritems():
+                    if results['result'] == False:
+                        failure = 1
+    else:
+        for minion, data in return_data['return'][0].iteritems():
+            if data == False:
+                failure = 1
 
-	return(failure)
+    return(failure)
 
 def print_output(results):
-	'''
-	Print api query results here.
-	'''
-	# Some Color
-	HEADER = '\033[95m'
-	WARNING = '\033[93m'
-	OK = '\033[92m'
-	CHANGE = '\033[94m'
-	FAIL = '\033[91m'
-	ENDC = '\033[0m'
+    '''
+    Print api query results here.
+    '''
+    # Some Color
+    HEADER = '\033[95m'
+    WARNING = '\033[93m'
+    OK = '\033[92m'
+    CHANGE = '\033[94m'
+    FAIL = '\033[91m'
+    ENDC = '\033[0m'
 
-	if state_output == "changes":
-		print(WARNING+"Displaying Changes Only"+ENDC)
+    if state_output == "changes":
+        print(WARNING+"Displaying Changes Only"+ENDC)
 
-	if function.startswith('state'):
-		if batch_size:
-			results = normalize_batch(results)
-		for minion, data in results['return'][0].iteritems():
-			print(HEADER+minion+ENDC+":")
-			if type(data) is not dict:
-				print("{0}{1}{2}".format(FAIL, data, ENDC))
-			else:
-				for state, results in data.iteritems():
-					if state_output == "changes" and results['changes'] == {} and results['result'] != False: continue
-					print("----------")
-					if results['result'] == False: C = FAIL
-					elif results['result'] == True and results['changes'] == {}: C = OK
-					elif results['result'] == True and results['changes'] != {}: C = CHANGE
-					else: C = WARNING
-					print("  "+C+state+ENDC+":")
-					for results_key, results_value in results.iteritems():
-						print("    "+C+results_key+": "+str(results_value)+ENDC)
+    if function.startswith('state'):
+        if batch_size:
+            results = normalize_batch(results)
+        for minion, data in results['return'][0].iteritems():
+            print(HEADER+minion+ENDC+":")
+            if type(data) is not dict:
+                print("{0}{1}{2}".format(FAIL, data, ENDC))
+            else:
+                for state, results in data.iteritems():
+                    if state_output == "changes" and results['changes'] == {} and results['result'] != False: continue
+                    print("----------")
+                    if results['result'] == False: C = FAIL
+                    elif results['result'] == True and results['changes'] == {}: C = OK
+                    elif results['result'] == True and results['changes'] != {}: C = CHANGE
+                    else: C = WARNING
+                    print("  "+C+state+ENDC+":")
+                    for results_key, results_value in results.iteritems():
+                        print("    "+C+results_key+": "+str(results_value)+ENDC)
 
-	else:
-		print(yaml.safe_dump(results))
+    else:
+        print(yaml.safe_dump(results))
 
 __init__()
 
 if saltclient == 'local':
-	results = local_client()
-	print_output(results)
-	sys.exit(valid_return(results))
+    results = local_client()
+    print_output(results)
+    sys.exit(valid_return(results))
 ]]></param>
           <param name="python-script-mode" value="code" />
           <param name="python-ver" value="*" />
