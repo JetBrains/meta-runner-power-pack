@@ -27,7 +27,11 @@
 '''
 Send a message to a SaltStack API
 '''
-import urllib2, urllib, json, ssl, sys, yaml, copy
+import urllib2, urllib, json, ssl, sys
+try:
+    import salt.output as salt_outputter
+except:
+    raise("the salt python module is required.  Install it with 'pip install salt' on the TeamCity agent.  The salt-minion and salt-master packages are not required.")
 
 def __init__():
     '''
@@ -141,14 +145,14 @@ def get_token():
         print("Error Getting Token")
         sys.exit(1)
 
-def normalize_batch(results):
+def normalize_local(results):
     '''
     Data is returned in different structure when in batch mode: https://github.com/saltstack/salt/issues/32459
-    Make these results the same shape as non-batch returns here
+    Make these results the same shape as batch returns here
     '''
-    e = {"return": [{}]}
-    for value in results['return']:
-        e['return'][0].update(value)
+    e = {"return": []}
+    for key, value in results['return'][0].iteritems():
+        e['return'].append({key:value })
     return e
 
 def valid_return(return_data):
@@ -161,62 +165,47 @@ def valid_return(return_data):
 
     failure = 0
     if function.startswith('state'):
-        for minion, data in return_data['return'][0].iteritems():
-            if type(data) is not dict:
-                failure = 1
-            else:
-                for state, results in data.iteritems():
-                    if results['result'] == False:
+        if type(return_data) is not dict:
+            failure = 1
+        else:
+            for miniondata in return_data['return']:
+                for minion, data in miniondata.iteritems():
+                    if type(data) is not dict:
                         failure = 1
+                    else:
+                        for state, results in data.iteritems():
+                            if results['result'] == False:
+                                failure = 1
     else:
-        for minion, data in return_data['return'][0].iteritems():
-            if data == False:
-                failure = 1
-
+        for data in return_data['return']:
+            for minion, data in miniondata.iteritems():
+                if data == False:
+                    failure = 1
     return(failure)
 
-def print_output(results):
-    '''
-    Print api query results here.
-    '''
-    # Some Color
-    HEADER = '\033[95m'
-    WARNING = '\033[93m'
-    OK = '\033[92m'
-    CHANGE = '\033[94m'
-    FAIL = '\033[91m'
-    ENDC = '\033[0m'
-
-    if state_output == "changes":
-        print(WARNING+"Displaying Changes Only"+ENDC)
-
-    if function.startswith('state'):
-        if batch_size:
-            results = normalize_batch(results)
-        for minion, data in results['return'][0].iteritems():
-            print(HEADER+minion+ENDC+":")
-            if type(data) is not dict:
-                print("{0}{1}{2}".format(FAIL, data, ENDC))
-            else:
-                for state, results in data.iteritems():
-                    if state_output == "changes" and results['changes'] == {} and results['result'] != False: continue
-                    print("----------")
-                    if results['result'] == False: C = FAIL
-                    elif results['result'] == True and results['changes'] == {}: C = OK
-                    elif results['result'] == True and results['changes'] != {}: C = CHANGE
-                    else: C = WARNING
-                    print("  "+C+state+ENDC+":")
-                    for results_key, results_value in results.iteritems():
-                        print("    "+C+results_key+": "+str(results_value)+ENDC)
-
-    else:
-        print(yaml.safe_dump(results))
-
 __init__()
-
 if saltclient == 'local':
     results = local_client()
-    print_output(results)
+
+    if not results:
+        sys.stderr.write('ERROR: No return received\n')
+        sys.exit(2)
+
+    opts = {"color": True, "color_theme": None, "extension_modules": "/"}
+    if state_output == "changes":
+        opts.update({"state_verbose": False})
+    else:
+        opts.update({"state_verbose": True})
+    #local returns comes back in a weird shape.  But batch returns are ok.  Juts make all returns look like batch.  I still need to test this with subset
+    if not batch_size:
+        results = normalize_local(results)
+    if function.startswith('state'):
+        out="highstate"
+    else:
+        out=None
+
+    for minion_result in results['return']:
+        salt_outputter.display_output(minion_result, out=out, opts=opts)
     sys.exit(valid_return(results))
 ]]></param>
           <param name="python-script-mode" value="code" />
