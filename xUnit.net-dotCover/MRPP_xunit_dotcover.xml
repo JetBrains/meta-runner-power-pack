@@ -88,7 +88,8 @@ try {
 
   if($assemblies -eq $null)
   {
-    Write-Host "No test assemblies found"
+    $cwd = Get-Location
+    Write-Host "No test assemblies found; cwd = $cwd ; assembly filter = $assemblyFilter"
     return
   }
   else
