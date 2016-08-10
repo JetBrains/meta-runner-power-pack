@@ -177,7 +177,7 @@ def valid_return(return_data):
                             if results['result'] == False:
                                 failure = 1
     else:
-        for data in return_data['return']:
+        for miniondata in return_data['return']:
             for minion, data in miniondata.iteritems():
                 if data == False:
                     failure = 1
