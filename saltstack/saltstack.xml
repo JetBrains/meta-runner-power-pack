@@ -21,7 +21,7 @@
       <runner name="Deploy" type="python">
         <parameters>
           <param name="bitness" value="*" />
-          <param name="python-exe" value="%AnyPython%" />
+          <param name="python-exe" value="%Python.2%" />
           <param name="python-kind" value="*" />
           <param name="python-script-code"><![CDATA[# -*- coding: utf-8 -*-
 '''
@@ -209,7 +209,7 @@ if saltclient == 'local':
     sys.exit(valid_return(results))
 ]]></param>
           <param name="python-script-mode" value="code" />
-          <param name="python-ver" value="*" />
+          <param name="python-ver" value="2" />
           <param name="teamcity.step.mode" value="default" />
         </parameters>
       </runner>
