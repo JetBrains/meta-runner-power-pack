@@ -3,7 +3,7 @@
   <description>Run a SaltStack execution module through the salt-api service</description>
   <settings>
     <parameters>
-      <param name="system.SALTARGUMENTS" value="" spec="text description='Argument for the salt module. for state.sls this will be the name of the state.' label='Argument for the salt module' validationMode='not_empty' display='normal'" />
+      <param name="system.SALTARGUMENTS" value="" spec="text description='Argument for the salt module. for state.sls this will be the name of the state.' label='Argument for the salt module' validationMode='any' display='normal'" />
       <param name="system.SALTBATCHSIZE" value="50%" spec="text description='Salt will apply the module to minion in batches as specified here.  Select a number or percentage.  Example: 50% or 1' label='Batch size' validationMode='any' display='normal'" />
       <param name="system.SALTCLIENT" value="local" spec="text description='This is the client for salt.  Only use &quot;local&quot; for now.  In the future we may add runners and other salt functions' label='Salt Client' validationMode='not_empty' display='normal'" />
       <param name="system.SALTEAUTH" value="ldap" spec="text description='Enter the auth type for the users specified.  Examples: |'ldap|' or |'pam|'' label='Salt auth type' validationMode='not_empty' display='normal'" />
@@ -177,7 +177,7 @@ def valid_return(return_data):
                             if results['result'] == False:
                                 failure = 1
     else:
-        for data in return_data['return']:
+        for miniondata in return_data['return']:
             for minion, data in miniondata.iteritems():
                 if data == False:
                     failure = 1
