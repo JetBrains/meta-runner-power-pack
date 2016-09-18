@@ -105,7 +105,7 @@ try {
   }
 
   # split multi-line xunit args into single line and correctly format
-  $assemblyArg = [String]::Join(" ", $assemblies)
+  $assemblyArg = "`"" + [String]::Join("`" `"", $assemblies) + "`""
   If($traits.Length -gt 0) {
     $traitArg = ($traits.Trim().Split("`r`n") | where {$_ -ne ""} | % { "-trait """+$_+""""}) -join " "
   }
