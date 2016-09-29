@@ -8,7 +8,7 @@
       <param name="system.SALTCLIENT" value="local" spec="text description='This is the client for salt.  Only use &quot;local&quot; for now.  In the future we may add runners and other salt functions' label='Salt Client' validationMode='not_empty' display='normal'" />
       <param name="system.SALTEAUTH" value="ldap" spec="text description='Enter the auth type for the users specified.  Examples: |'ldap|' or |'pam|'' label='Salt auth type' validationMode='not_empty' display='normal'" />
       <param name="system.SALTEXPRFORM" value="grain" spec="text description='The target expression type.  Examples: |'glob|', |'grain|', |'list|', |'pillar|',  See salt docs for more.' label='Salt expression form' validationMode='not_empty' display='normal'" />
-      <param name="system.SALTFUNCTION" value="state.sls" spec="text description='The salt module to execute.  Example: state.sls https://docs.saltstack.com/en/latest/ref/modules/all/' label='Salt moedul function' validationMode='not_empty' display='normal'" />
+      <param name="system.SALTFUNCTION" value="state.sls" spec="text description='The salt module to execute.  Example: state.sls https://docs.saltstack.com/en/latest/ref/modules/all/' label='Salt module function' validationMode='not_empty' display='normal'" />
       <param name="system.SALTKWARGS" value="" spec="text description='Extra arguments' label='kwargs' display='normal'" />
       <param name="system.SALTPASSWORD" value="" spec="password description='Password for the saltstack user' label='Salt user password' display='normal'" />
       <param name="system.SALTSTATEOUTPUT" value="" spec="text description='Only supported option is changes, which will only output state output that has changed' label='state-output' display='normal'" />
