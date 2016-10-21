@@ -36,6 +36,18 @@
 /&gt;
 
 &lt;replaceregexp file="${tags.file}"
+               match="^\s+"
+               replace=""
+               flags="gm"
+/&gt;
+
+&lt;replaceregexp file="${tags.file}"
+               match="\s+$"
+               replace=""
+               flags="gm"
+/&gt;
+
+&lt;replaceregexp file="${tags.file}"
                match="(\s+)"
                replace="&amp;lt;/tag&gt;&amp;lt;tag&gt;"
                flags="gm"
