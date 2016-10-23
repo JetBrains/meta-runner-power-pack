@@ -84,7 +84,7 @@ try {
   }
 	
    ## Search for the assemblies using wildcard pattern
-  $assemblies = (Get-ChildItem $assemblyFilter -Recurse | select -ExpandProperty FullName)
+  $assemblies = (Get-ChildItem . -Recurse | where {$_.FullName -like $assemblyFilter }| select -ExpandProperty FullName)
 
   if($assemblies -eq $null)
   {
