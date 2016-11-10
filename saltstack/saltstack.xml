@@ -94,7 +94,7 @@ def exec_rest_call(args):
     request = urllib2.Request(salturl, data, headers=headers)
 
     try: 
-        d = urllib2.urlopen(request, context=gcontext).read()
+        d = urllib2.urlopen(request, timeout=3600, context=gcontext).read()
     except urllib2.HTTPError, e:
         print("Error in API Call: " + e.read())
         sys.exit(1)
