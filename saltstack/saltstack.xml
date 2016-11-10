@@ -166,16 +166,26 @@ def valid_return(return_data):
     failure = 0
     if function.startswith('state'):
         if type(return_data) is not dict:
+            if type(return_data) is list:
+                for error in return_data:
+                    sys.stderr.write(error+'\n')
+            elif type(return_data) is str:
+                sys.stderr.write(return_data)
             failure = 1
         else:
-            for miniondata in return_data['return']:
-                for minion, data in miniondata.iteritems():
-                    if type(data) is not dict:
-                        failure = 1
-                    else:
-                        for state, results in data.iteritems():
-                            if results['result'] == False:
-                                failure = 1
+            if return_data['return']:
+                for miniondata in return_data['return']:
+                    for minion, data in miniondata.iteritems():
+                        if type(data) is not dict:
+                            sys.stderr.write(minion+': '+str(data)+'\n')
+                            failure = 1
+                        else:
+                            for state, results in data.iteritems():
+                                if results['result'] == False:
+                                    failure = 1
+            else:
+                sys.stderr.write('ERROR: No minions responded\n')
+                failure = 1
     else:
         for miniondata in return_data['return']:
             for minion, data in miniondata.iteritems():
