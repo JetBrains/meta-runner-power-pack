@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<meta-runner name="Bitbucket REST API tag creator">
+  <description>Creates a tag in git repo for every production build</description>
+  <settings>
+    <parameters>
+      <param name="mr.bitbucketapitag.bitbucketServerUrl" value="" spec="text description='The base URL (including protocol) of the running Bitbucket instance' display='normal' label='Bitbucket Url:'" />
+      <param name="mr.bitbucketapitag.basicAuthHeader" value="" spec="text description='Base64 encoded basic auth header' display='normal' label='Auth Header:'" />
+      <param name="mr.bitbucketapitag.projectgroup" value="" spec="text description='The project key for this repository (visible in the repo URL)' display='normal' label='Bitbucket Project Group:'" />
+      <param name="mr.bitbucketapitag.coderepo" value="" spec="text description='Repo slug for this repository (visible in the repo URL)' display='normal' label='Bitbucket Repo Slug:'" />
+      <param name="mr.bitbucketapitag.commitHash" value="%build.vcs.number%" spec="text description='Hash of the commit to be tagged' display='normal' label='Commit Hash:'" />
+      <param name="mr.bitbucketapitag.tagName" value="%build.number%" spec="text description='This parameter needs to be a new (unique) tag.  Generally should be using the build number or something unique to this build.' display='normal' label='Tag Name:'" />
+      <param name="mr.bitbucketapitag.tagDescription" value="" spec="text description='Tag Description (optional)' display='normal' label='Tag Description (optional):'" />
+    </parameters>
+    <build-runners>
+      <runner id="RUNNER_1666" name="Bitbucket API tag creator" type="jetbrains_powershell">
+        <parameters>
+          <param name="jetbrains_powershell_bitness" value="x86" />
+          <param name="jetbrains_powershell_execution" value="PS1" />
+          <param name="jetbrains_powershell_script_code"><![CDATA[Write-Output "Tagging this build..."
+
+    $bitbucketUrl = %mr.bitbucketapitag.bitbucketServerUrl%
+    $authHeader = %mr.bitbucketapitag.basicAuthHeader%
+	$projectKey = '%mr.bitbucketapitag.projectgroup%'
+	$repoSlug = '%mr.bitbucketapitag.coderepo%'
+	$commitId = '%mr.bitbucketapitag.commitHash%'
+    $tagName = "%mr.bitbucketapitag.tagName%"
+    $tagDescription = "%mr.bitbucketapitag.tagDescription%"
+
+    Write-Host "Branch:`t%teamcity.build.branch%`nProject:`t$projectKey`nRepo Slug:`t$repoSlug`nCommit:`t$commitId`nTag name:`t$tagName`nTag description:`t$tagDescription"
+		
+	$params = @{
+		Uri = "$bitbucketUrl/rest/api/1.0/projects/$projectKey/repos/$repoSlug/tags";
+		Method = 'POST';
+		Headers = @{
+			Authorization = 'Basic $authHeader';
+			ContentType = 'application/json'
+		};
+		Body = @{
+			name=$tagName
+			startPoint=$commitId
+			description=''
+		} | ConvertTo-Json;
+		ContentType = 'application/json'
+	}
+	
+	$ret = Invoke-RestMethod @params;
+
+Write-Output "tagging finished"]]></param>
+          <param name="jetbrains_powershell_script_mode" value="CODE" />
+          <param name="teamcity.step.mode" value="default" />
+        </parameters>
+      </runner>
+    </build-runners>
+  </settings>
+</meta-runner>
+
