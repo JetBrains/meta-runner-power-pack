@@ -180,9 +180,13 @@ def valid_return(return_data):
                             sys.stderr.write(minion+': '+str(data)+'\n')
                             failure = 1
                         else:
-                            for state, results in data.iteritems():
-                                if results['result'] == False:
+                            if "retcode" in data:
+                                if data["retcode"] != 0:
                                     failure = 1
+                            else:
+                                for state, results in data.iteritems():
+                                    if results['result'] == False:
+                                        failure = 1
             else:
                 sys.stderr.write('ERROR: No minions responded\n')
                 failure = 1
@@ -215,7 +219,12 @@ if saltclient == 'local':
         out=None
 
     for minion_result in results['return']:
-        salt_outputter.display_output(minion_result, out=out, opts=opts)
+        for minion, data in minion_result.iteritems():
+            if "ret" in data:
+                data[minion] = data.pop('ret')
+                salt_outputter.display_output(data, out=out, opts=opts)
+            else:
+                salt_outputter.display_output(minion_result, out=out, opts=opts)
     sys.exit(valid_return(results))
 ]]></param>
           <param name="python-script-mode" value="code" />
