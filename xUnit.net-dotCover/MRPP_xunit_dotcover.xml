@@ -8,7 +8,7 @@
       <param name="xUnitNet.executable" value="xunit.console.exe" spec="text description='The xunit runner executable to use in the nuget package' display='normal' label='Xunit Runner Executable'" />
       <param name="xUnitNet.executable.args" value="" spec="text description='Custom xunit runner arguments' display='normal' label='Xunit Runner Executable additional arguments'" />
       <param name="xUnitNet.executable.legacymode" value="false" spec="checkbox checkedValue='true' description='For mixed mode assemblies, enables xunit runner to use legacy activiation' uncheckedValue='false' label='Enable .Net V2 Legacy Activation' display='normal'" />
-      <param name="xUnitNet.assembliesPath" value="*/bin/*tests.dll" spec="text description='The assemblies to test; relative to the working directory. Asterix wildcard (*) is supported here' display='normal' label='Assemblies to test:'" />
+      <param name="xUnitNet.assembliesPath" value="*/bin/*tests.dll" spec="text description='The assemblies to test; relative to the working directory. Supports multiple paths separated by comma(,). Asterix wildcard (*) is supported here' display='normal' label='Assemblies to test:'" />
       <param name="xUnitNet.trait" value="" spec="text description='only run tests with matching name/value traits, one name=value per line (e.x. name=value)' validationMode='any' label='Include Traits' display='normal'" />
       <param name="xUnitNet.notrait" value="Category=Integration" spec="text description='do not run tests with matching name/value traits, one name=value per line (e.x. name=value)' validationMode='any' label='Exclude Traits' display='normal'" />
       <param name="xUnitNet.dotCover.enable" value="true" spec="checkbox checkedValue='true' description='Enables or disables running test coverage with dotCover' uncheckedValue='false' label='Enable dotCover coverage' display='normal'" />
@@ -82,10 +82,19 @@ try {
 		$doc.configuration.startup.SetAttribute("useLegacyV2RuntimeActivationPolicy", "true")
 		$doc.Save($config)
   }
+  
+  ##split string into array if multiple wildcard path specified comma(,) separated	
+   $assemblyFilterPaths = $assemblyFilter.Trim() -split ','
+   
+   $assemblies = @()
+   
+	foreach($filterPath in $assemblyFilterPaths)
+	{
+    ## Search for the assemblies using wildcard pattern
+	$assembliesFromPath = (Get-ChildItem $filterPath.Trim() -Recurse | select -ExpandProperty FullName)
+	$assemblies+= $assembliesFromPath
+	}
 	
-   ## Search for the assemblies using wildcard pattern
-  $assemblies = (Get-ChildItem $assemblyFilter -Recurse | select -ExpandProperty FullName)
-
   if($assemblies -eq $null)
   {
     $cwd = Get-Location
