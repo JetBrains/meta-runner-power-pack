@@ -83,7 +83,7 @@ try {
 		$doc.Save($config)
   }
   
-  ##split string into array if multiple wildcard path specified comma(,) separated	
+  ##split string into array if multiple wildcard path separated by comma(,) or newline	
    $assemblyFilterPaths = $assemblyFilter.Trim() -split {$_ -eq "," -or $_ -eq "`n" }
    
    $assemblies = @()
