@@ -4,7 +4,7 @@
   <settings>
     <parameters>
       <param name="system.SALTARGUMENTS" value="" spec="text description='Argument for the salt module. for state.sls this will be the name of the state.' label='Argument for the salt module' validationMode='any' display='normal'" />
-      <param name="system.SALTBATCHSIZE" value="50%" spec="text description='Salt will apply the module to minion in batches as specified here.  Select a number or percentage.  Example: 50% or 1' label='Batch size' validationMode='any' display='normal'" />
+      <param name="system.SALTBATCHSIZE" value="" spec="text description='Salt will apply the module to minion in batches as specified here.  Select a number or percentage.  Example: 50% or 1' label='Batch size' validationMode='any' display='normal'" />
       <param name="system.SALTCLIENT" value="local" spec="text description='This is the client for salt.  Only use &quot;local&quot; for now.  In the future we may add runners and other salt functions' label='Salt Client' validationMode='not_empty' display='normal'" />
       <param name="system.SALTEAUTH" value="ldap" spec="text description='Enter the auth type for the users specified.  Examples: |'ldap|' or |'pam|'' label='Salt auth type' validationMode='not_empty' display='normal'" />
       <param name="system.SALTEXPRFORM" value="grain" spec="text description='The target expression type.  Examples: |'glob|', |'grain|', |'list|', |'pillar|',  See salt docs for more.' label='Salt expression form' validationMode='not_empty' display='normal'" />
@@ -21,7 +21,7 @@
       <runner name="Deploy" type="python">
         <parameters>
           <param name="bitness" value="*" />
-          <param name="python-exe" value="%AnyPython%" />
+          <param name="python-exe" value="%Python.2%" />
           <param name="python-kind" value="*" />
           <param name="python-script-code"><![CDATA[# -*- coding: utf-8 -*-
 '''
@@ -94,7 +94,7 @@ def exec_rest_call(args):
     request = urllib2.Request(salturl, data, headers=headers)
 
     try: 
-        d = urllib2.urlopen(request, context=gcontext).read()
+        d = urllib2.urlopen(request, timeout=3600, context=gcontext).read()
     except urllib2.HTTPError, e:
         print("Error in API Call: " + e.read())
         sys.exit(1)
@@ -166,16 +166,30 @@ def valid_return(return_data):
     failure = 0
     if function.startswith('state'):
         if type(return_data) is not dict:
+            if type(return_data) is list:
+                for error in return_data:
+                    sys.stderr.write(error+'\n')
+            elif type(return_data) is str:
+                sys.stderr.write(return_data)
             failure = 1
         else:
-            for miniondata in return_data['return']:
-                for minion, data in miniondata.iteritems():
-                    if type(data) is not dict:
-                        failure = 1
-                    else:
-                        for state, results in data.iteritems():
-                            if results['result'] == False:
-                                failure = 1
+            if return_data['return']:
+                for miniondata in return_data['return']:
+                    for minion, data in miniondata.iteritems():
+                        if type(data) is not dict:
+                            sys.stderr.write(minion+': '+str(data)+'\n')
+                            failure = 1
+                        else:
+                            if "retcode" in data:
+                                if data["retcode"] != 0:
+                                    failure = 1
+                            else:
+                                for state, results in data.iteritems():
+                                    if results['result'] == False:
+                                        failure = 1
+            else:
+                sys.stderr.write('ERROR: No minions responded\n')
+                failure = 1
     else:
         for miniondata in return_data['return']:
             for minion, data in miniondata.iteritems():
@@ -205,11 +219,16 @@ if saltclient == 'local':
         out=None
 
     for minion_result in results['return']:
-        salt_outputter.display_output(minion_result, out=out, opts=opts)
+        for minion, data in minion_result.iteritems():
+            if "ret" in data:
+                data[minion] = data.pop('ret')
+                salt_outputter.display_output(data, out=out, opts=opts)
+            else:
+                salt_outputter.display_output(minion_result, out=out, opts=opts)
     sys.exit(valid_return(results))
 ]]></param>
           <param name="python-script-mode" value="code" />
-          <param name="python-ver" value="*" />
+          <param name="python-ver" value="2" />
           <param name="teamcity.step.mode" value="default" />
         </parameters>
       </runner>
