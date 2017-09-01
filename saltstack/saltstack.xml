@@ -10,6 +10,7 @@
       <param name="system.SALTEXPRFORM" value="grain" spec="text description='The target expression type.  Examples: |'glob|', |'grain|', |'list|', |'pillar|',  See salt docs for more.' label='Salt expression form' validationMode='not_empty' display='normal'" />
       <param name="system.SALTFUNCTION" value="state.sls" spec="text description='The salt module to execute.  Example: state.sls https://docs.saltstack.com/en/latest/ref/modules/all/' label='Salt module function' validationMode='not_empty' display='normal'" />
       <param name="system.SALTKWARGS" value="" spec="text description='Extra arguments' label='kwargs' display='normal'" />
+      <param name="system.SALTPILLAR" value="" spec="text description='The path to a pillar file to use with state.apply.  This pillar will overwrite any other pillar assigned to the minion.  The pillar must be valid yaml, no jinja markup is allowed here.' label='Pillar File' display='normal'" />
       <param name="system.SALTPASSWORD" value="" spec="password description='Password for the saltstack user' label='Salt user password' display='normal'" />
       <param name="system.SALTSTATEOUTPUT" value="" spec="text description='Only supported option is changes, which will only output state output that has changed' label='state-output' display='normal'" />
       <param name="system.SALTSUBSET" value="" spec="text description='Pick a random number of minions from this parameter from the target' label='subset' display='normal'" />
@@ -27,7 +28,7 @@
 '''
 Send a message to a SaltStack API
 '''
-import urllib2, urllib, json, ssl, sys
+import urllib2, urllib, json, yaml, ssl, sys
 try:
     import salt.output as salt_outputter
 except:
@@ -37,7 +38,7 @@ def __init__():
     '''
     Set gloval vars.  These are replaced with env variables from TeamCity
     '''
-    global saltclient, salturl, eauth, username, password, batch, target, expr_form, function, arguments, batch_size, subset, kwargs, state_output
+    global saltclient, salturl, eauth, username, password, batch, target, expr_form, function, arguments, pillar, batch_size, subset, kwargs, state_output
     saltclient = '%system.SALTCLIENT%'
     salturl = '%system.SALTURL%'
     eauth = '%system.SALTEAUTH%'
@@ -47,6 +48,7 @@ def __init__():
     expr_form = '%system.SALTEXPRFORM%'
     function = '%system.SALTFUNCTION%'
     arguments = '%system.SALTARGUMENTS%'
+    pillar = '%system.SALTPILLAR%'
     batch_size = '%system.SALTBATCHSIZE%'
     subset = '%system.SALTSUBSET%'
     kwargs = '%system.SALTKWARGS%'
@@ -65,16 +67,23 @@ def local_client():
         'expr_form': expr_form,
         'client': 'local',
         'fun': function,
+        'arg': []
     }
     if kwargs:
         args.update(dict(kwarg.split("=") for kwarg in kwargs.split(" ")))
     if arguments:
         args['arg'] = arguments.split(" ")
+    if pillar:
+        with open(pillar, 'r') as stream:
+            try:
+                args['arg'].append('pillar='+json.dumps(yaml.load(stream)))
+            except yaml.YAMLError as e:
+                print(e)
     if batch_size:
         args['batch'] = batch_size
         args['client'] = 'local_batch'
     if subset:
-        args['sub'] = subset
+        args['sub'] = int(subset)
         args['client'] = 'local_subset'
     return exec_rest_call(args)
 
