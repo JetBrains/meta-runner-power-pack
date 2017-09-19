@@ -1,7 +1,9 @@
 Meta-runner Power Pack
 ======================
 
-A collection of [Meta-runners](http://confluence.jetbrains.com/display/TCD10/Working+with+Meta-Runner) for TeamCity.
+[![official JetBrains project](http://jb.gg/badges/official-plastic.svg)](https://confluence.jetbrains.com/display/ALL/JetBrains+on+GitHub) [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
+
+A collection of [Meta-runners](http://confluence.jetbrains.com/display/TCDL/Working+with+Meta-Runner) for TeamCity.
 
 Available Meta-Runners
 ======================
@@ -36,11 +38,11 @@ Available Meta-Runners
 Installation Instructions
 =========================
 
-Each file called **MRPP_\<some text\>.xml** contains a definition of a single [Meta-runner](http://confluence.jetbrains.com/display/TCD10/Working+with+Meta-Runner).
+Each file called **MRPP_\<some text\>.xml** contains a definition of a single [Meta-runner](http://confluence.jetbrains.com/display/TCDL/Working+with+Meta-Runner).
 
 You can install a meta-runner directly via the file system or, since TeamCity 9.0, using the TeamCity Web UI:
 
-- to install Meta-runner directly to the file system, take the Meta-runner definition file and put it into the [\<TeamCity Data Directory\>](http://confluence.jetbrains.com/display/TCD10/TeamCity+Data+Directory)/config/projects/\<Project ID\>/pluginData/metaRunners/ directory, where **\<Project ID\>** is the identifier of a project where you want to place the Meta-runner. If the **metaRunners** directory does not exist, it will be created. Once you place the file on the disk, TeamCity will detect it and load this Meta-runner; no server restart is required.
+- to install Meta-runner directly to the file system, take the Meta-runner definition file and put it into the [\<TeamCity Data Directory\>](http://confluence.jetbrains.com/display/TCDL/TeamCity+Data+Directory)/config/projects/\<Project ID\>/pluginData/metaRunners/ directory, where **\<Project ID\>** is the identifier of a project where you want to place the Meta-runner. If the **metaRunners** directory does not exist, it will be created. Once you place the file on the disk, TeamCity will detect it and load this Meta-runner; no server restart is required.
 
 - to install Meta-runner via the Web UI, go to the Project Settings page, select Meta-Runners from the list of settings on the left, click Upload Meta-Runner and select the Meta-runner definition file. Save you changes.
 
@@ -61,8 +63,3 @@ and cannot be overridden from path '<another path>\<meta runner file name>.xml'`
 
 it means that a Meta-runner with the same ID is already defined in another project. To fix it, you can either remove the old Meta-runner, or change the ID of the new one.
 The ID of the Meta-runner is the name of the file, so you can simply rename the file. It makes sense to preserve prefix **MRPP_** so that you could understand where this Meta-runner came from.
-
-License
-=======
-
-Apache License 2.0
