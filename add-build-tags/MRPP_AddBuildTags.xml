@@ -6,7 +6,9 @@
   <description />
   <settings>
     <parameters>
-      <param name="system.tags" value="" spec="text description='Space separated tags for build' display='normal' label='Tags:' validationMode='not_empty'" />
+      <param name="system.username" value="" spec="text description='Username of the user who performs the action (if Username or Password are not filled, system.teamcity.auth.* credentials will be used).' display='normal' label='Username:'" />
+      <param name="system.password" value="" spec="password description='Password of the user who performs the action (if Username or Password are not filled, system.teamcity.auth.* credentials will be used).' display='normal' label='Password:'" />
+      <param name="system.tags" value="" spec="text description='Space separated tags for the build.' display='normal' label='Tags:' validationMode='not_empty'" />
     </parameters>
     <build-runners>
       <runner name="Add Build Tags" type="Ant">
@@ -18,7 +20,25 @@
               <property name="tags.file" location="${teamcity.build.tempDir}/tags.txt" />
               <property name="reqParams.file" location="${teamcity.build.tempDir}/rawParams.txt" />
 
-              <target name="prepare-params">
+              <condition property="should.use.custom.credentials">
+                <and>
+                  <length string="${username}" trim="true" when="greater" length="0" />
+                  <length string="${password}" trim="true" when="greater" length="0" />
+                </and>
+              </condition>
+
+              <target name="prepare-custom-credentials" if="should.use.custom.credentials">
+	              <property name="credentials.username" value="${username}" />
+	              <property name="credentials.password" value="${password}" />
+              </target>
+
+              <target name="prepare-internal-credentials" unless="should.use.custom.credentials">
+	              <property name="credentials.username" value="${teamcity.auth.userId}" />
+	              <property name="credentials.password" value="${teamcity.auth.password}" />
+              </target>
+              
+
+              <target name="prepare-tags" depends="prepare-internal-credentials,prepare-custom-credentials">
 
                 <echo file="${tags.file}">${tags}</echo>
 
@@ -59,7 +79,7 @@
 
               </target>
 
-              <target name="addTags" depends="prepare-params">
+              <target name="addTags" depends="prepare-tags">
                 <http url="%teamcity.serverUrl%/httpAuth/app/rest/8.0/builds/id:%teamcity.build.id%/tags"
                 method="POST"
                 expected="200"
@@ -67,7 +87,7 @@
                   <headers>
                     <header name="Content-Type" value="text/plain" />
                   </headers>
-                  <credentials username="${teamcity.auth.userId}" password="${teamcity.auth.password}" />
+                  <credentials username="${credentials.username}" password="${credentials.password}" />
                   <entity file="${reqParams.file}" binary="false" />
                 </http>
               </target>
