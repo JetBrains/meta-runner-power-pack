@@ -28,11 +28,13 @@
               </condition>
 
               <target name="prepare-custom-credentials" if="should.use.custom.credentials">
+                <echo>using custom credentials</echo>
 	              <property name="credentials.username" value="${username}" />
 	              <property name="credentials.password" value="${password}" />
               </target>
 
               <target name="prepare-internal-credentials" unless="should.use.custom.credentials">
+                <echo>using internal credentials</echo>
 	              <property name="credentials.username" value="${teamcity.auth.userId}" />
 	              <property name="credentials.password" value="${teamcity.auth.password}" />
               </target>
