@@ -44,7 +44,7 @@ function Build-Arguments {
   return $parameters
 }
 
-$nuget = Join-Path -Path '%teamcity.tool.NuGet.CommandLine.DEFAULT.nupkg%' -ChildPath 'tools\NuGet.exe'
+$nuget = Join-Path -Path '%teamcity.tool.NuGet.CommandLine.DEFAULT%' -ChildPath 'tools\NuGet.exe'
 $arguments = Build-Arguments
 
 if(%mr.NuGetInstall.Log%) {
