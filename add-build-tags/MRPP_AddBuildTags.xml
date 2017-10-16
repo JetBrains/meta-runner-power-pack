@@ -6,6 +6,8 @@
   <description />
   <settings>
     <parameters>
+      <param name="system.username" value="" spec="text description='Username of a user who performs action' display='normal' label='Username:' validationMode='not_empty'" />
+      <param name="system.password" value="" spec="password description='Password of a user who performs action' display='normal' label='Password:'" />
       <param name="system.tags" value="" spec="text description='Space separated tags for build' display='normal' label='Tags:' validationMode='not_empty'" />
     </parameters>
     <build-runners>
@@ -67,7 +69,7 @@
                   <headers>
                     <header name="Content-Type" value="text/plain" />
                   </headers>
-                  <credentials username="${teamcity.auth.userId}" password="${teamcity.auth.password}" />
+                  <credentials username="${username}" password="${password}" />
                   <entity file="${reqParams.file}" binary="false" />
                 </http>
               </target>
