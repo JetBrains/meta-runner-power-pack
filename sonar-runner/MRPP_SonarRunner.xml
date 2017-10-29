@@ -9,7 +9,7 @@
       <param name="system.sonar.projectName" value="" spec="text description='Name of the project that will be displayed on the web interface. %system.teamcity.projectName% could be used here.' label='Project name:' validationMode='any'" />
       <param name="system.sonar.projectVersion" value="" spec="text description='The project version. %build.number% could be used here.' label='Project version:' validationMode='any'" />
       <param name="system.sonar.projectDescription" value="" spec="text description='Description of the project.' label='Project description:'" />
-      <param name="system.sonar.language" value="" spec="text description='Set the language of source code. If a plugin allows to analyze another language, the associated source code analyser can be activated with this property.' label='Sources language:'" />
+      <param name="system.sonar.language" value="" spec="text description='Set the language of source code. If a plugin allows analyzing another language, the associated source code analyser can be activated with this property.' label='Sources language:'" />
       <param name="system.sonar.sources" value="" spec="text description='Comma-separated paths to directories containing sources.' label='Sources paths:'" />
       <param name="system.sonar.tests" value="" spec="text description='Comma-separated paths to directories containing tests.' label='Tests paths:'" />
 

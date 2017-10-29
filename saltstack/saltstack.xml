@@ -96,10 +96,7 @@ def exec_rest_call(args):
 
     headers = { 'X-Auth-Token' : token, 'Accept' : 'application/json', 'Content-Type' : 'application/json' }
     data = json.dumps(args)
-    if sys.version_info <= (2,7,9):
-        gcontext = ''
-    else:
-        gcontext = ssl.SSLContext(ssl.PROTOCOL_TLSv1)
+    gcontext = ssl.SSLContext(ssl.PROTOCOL_TLSv1)
     request = urllib2.Request(salturl, data, headers=headers)
 
     try: 
@@ -133,10 +130,7 @@ def get_token():
         'password': password,
         'eauth': eauth
     })
-    if sys.version_info <= (2,7,9):
-        gcontext = ''
-    else:
-        gcontext = ssl.SSLContext(ssl.PROTOCOL_TLSv1)
+    gcontext = ssl.SSLContext(ssl.PROTOCOL_TLSv1)
 
     try:
         auth = urllib2.urlopen(url, params, context=gcontext).read()
