@@ -53,7 +53,7 @@ Param (
     [string] $nugetExe = "%xUnitNet.nugetExe%\tools\nuget.exe",
     [string] $xUnitNuget = "%xUnitNet.nugetSource%",
     [string] $xUnitExe = "%xUnitNet.executable%",
-    [string] $dotCoverExecutable = "%teamcity.tool.dotCover%",
+    [string] $dotCoverExecutable = "%teamcity.tool.JetBrains.dotCover.CommandLineTools.DEFAULT%",
     [boolean] $xunitLegacy = [System.Convert]::ToBoolean("%xUnitNet.executable.legacymode%"),
     [string] $assemblyFilter = "%xUnitNet.assembliesPath%",
     [string] $assemblyExcludeFilter = "%xUnitNet.assembliesExcludePath%",
@@ -74,7 +74,7 @@ try {
 
 	## get xunit runner from nuget package feed
   iex "$nugetExe install xunit.runner.console -source $xUnitNuget"
-	$xunit = Join-Path $workingDir "xunit.runner.console.*\tools\$xUnitExe" | Resolve-Path
+	$xunit = Join-Path $workingDir "xunit.runner.console.*\tools\net452\$xUnitExe" | Resolve-Path
 	
   ## modify runner config if legacy v2 runtime activation mode required
 	If($xunitLegacy) {
@@ -104,7 +104,7 @@ try {
 	foreach($filterPath in $assemblyFilterPaths)
 	{
     ## Search for the assemblies using wildcard pattern (Also filter out excluded assemblies)
-	$assembliesFromPath = (Get-ChildItem $filterPath.Trim() -Recurse -Exclude $excludedAssemblies.Trim() | select -ExpandProperty FullName)
+	$assembliesFromPath = (Get-ChildItem $filterPath.Trim() -Recurse -Exclude $excludedAssemblies | select -ExpandProperty FullName)
 	$assemblies+= $assembliesFromPath
 	}
 	
@@ -170,6 +170,7 @@ try {
   iex $command
   
   ## Report coverage results and output build artifacts
+  Write-Host "##teamcity[dotNetCoverage dotcover_home='$dotCoverExecutable']"
   write-host "##teamcity[importData type='dotNetCoverage' tool='dotcover' path='$outputFile']"
   write-host "##teamcity[publishArtifacts '$settingsFileName']"
   write-host "##teamcity[publishArtifacts '$coverageLogFileName']"
