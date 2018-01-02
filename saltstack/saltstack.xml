@@ -194,7 +194,7 @@ def valid_return(return_data):
                                     failure = 1
                             else:
                                 for state, results in data.iteritems():
-                                    if results['result'] == False:
+                                    if results.get('result', True) == False:
                                         failure = 1
             else:
                 sys.stderr.write('ERROR: No minions responded\n')
