@@ -1,0 +1,235 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<meta-runner name="SaltStack-2017.7.2">
+  <description>Run a SaltStack execution module through the salt-api service.  Compatible with Salt version 2017.7.0 or greater</description>
+  <settings>
+    <parameters>
+      <param name="system.SALTARGUMENTS" value="" spec="text description='Argument for the salt module. for state.sls this will be the name of the state.' label='Argument for the salt module' validationMode='any' display='normal'" />
+      <param name="system.SALTBATCHSIZE" value="" spec="text description='Salt will apply the module to minion in batches as specified here.  Select a number or percentage.  Example: 50% or 1' label='Batch size' validationMode='any' display='normal'" />
+      <param name="system.SALTCLIENT" value="local" spec="text description='This is the client for salt.  Only use &quot;local&quot; for now.  In the future we may add runners and other salt functions' label='Salt Client' validationMode='not_empty' display='normal'" />
+      <param name="system.SALTEAUTH" value="ldap" spec="text description='Enter the auth type for the users specified.  Examples: |'ldap|' or |'pam|'' label='Salt auth type' validationMode='not_empty' display='normal'" />
+      <param name="system.SALTEXPRFORM" value="grain" spec="text description='The target expression type.  Examples: |'glob|', |'grain|', |'list|', |'pillar|',  See salt docs for more.' label='Salt expression form' validationMode='not_empty' display='normal'" />
+      <param name="system.SALTFUNCTION" value="state.sls" spec="text description='The salt module to execute.  Example: state.sls https://docs.saltstack.com/en/latest/ref/modules/all/' label='Salt module function' validationMode='not_empty' display='normal'" />
+      <param name="system.SALTKWARGS" value="" spec="text description='Extra arguments' label='kwargs' display='normal'" />
+      <param name="system.SALTPILLAR" value="" spec="text description='The path to a pillar file to use with state.apply.  This pillar will overwrite any other pillar assigned to the minion.  The pillar must be valid yaml, no jinja markup is allowed here.' label='Pillar File' display='normal'" />
+      <param name="system.SALTPASSWORD" value="" spec="password description='Password for the saltstack user' label='Salt user password' display='normal'" />
+      <param name="system.SALTSTATEOUTPUT" value="" spec="text description='Only supported option is changes, which will only output state output that has changed' label='state-output' display='normal'" />
+      <param name="system.SALTSUBSET" value="" spec="text description='Pick a random number of minions from this parameter from the target' label='subset' display='normal'" />
+      <param name="system.SALTTARGET" value="" spec="text description='Select which minions should be targeted.  Be certain to follow the format selected for SALTEXPRFORM.  Example: |'grain:value|'  if expr_form is grain' label='Minion target' validationMode='not_empty' display='normal'" />
+      <param name="system.SALTURL" value="https://salt-master:8000" spec="text description='The http url to the salt master: Example: https://192.168.1.1:8000' label='Salt master url' validationMode='not_empty' display='normal'" />
+      <param name="system.SALTUSERNAME" value="" spec="text description='The username for the salt user.  User must have permission to the module as specified under external_auth in the salt master config.' label='Salt username' validationMode='not_empty' display='normal'" />
+    </parameters>
+    <build-runners>
+      <runner name="Deploy" type="python">
+        <parameters>
+          <param name="bitness" value="*" />
+          <param name="python-exe" value="%Python.3%" />
+          <param name="python-kind" value="*" />
+          <param name="python-script-code"><![CDATA[
+#!/usr/bin/python3
+'''
+Send a message to a SaltStack API
+'''
+import urllib.request, urllib.parse, urllib.error, json, ssl, sys, yaml
+
+try:
+    import salt.output as salt_outputter
+except ImportError:
+    raise ImportError("The salt python3 module is required.  Install it with 'pip3 download salt' on the TeamCity agent.  The salt-minion and salt-master packages are not required.")
+    sys.exit(1)
+
+def __init__():
+    '''
+    Set gloval vars.  These are replaced with env variables from TeamCity
+    '''
+
+    global saltclient, salturl, eauth, username, password, batch, target, tgt_type, function, arguments, pillar, batch_size, subset, kwargs, state_output
+    saltclient = '%system.SALTCLIENT%'
+    salturl = '%system.SALTURL%'
+    eauth = '%system.SALTEAUTH%'
+    username = '%system.SALTUSERNAME%'
+    password = '%system.SALTPASSWORD%'
+    target = '%system.SALTTARGET%'
+    tgt_type = '%system.SALTEXPRFORM%'
+    function = '%system.SALTFUNCTION%'
+    arguments = '%system.SALTARGUMENTS%'
+    pillar = '%system.SALTPILLAR%'
+    batch_size = '%system.SALTBATCHSIZE%'
+    subset = '%system.SALTSUBSET%'
+    kwargs = '%system.SALTKWARGS%'
+    state_output = '%system.SALTSTATEOUTPUT%'
+
+    if batch_size and subset:
+        raise SystemExit('SALTBATCHSIZE and SALTSUBSET cannot be used together.  Erase one of them please')
+
+def local_client():
+    '''
+    This will run a normal salt command using the saltstack localclient.
+    Example: salt 'minion' some.module
+    '''
+    args = {
+        'tgt': target,
+        'tgt_type': tgt_type,
+        'client': 'local',
+        'fun': function,
+        'arg': []
+    }
+    if kwargs:
+        args.update(dict(kwarg.split("=") for kwarg in kwargs.split(" ")))
+    if arguments:
+        args['arg'] = arguments.split(" ")
+    if pillar:
+        with open(pillar, 'r') as stream:
+            try:
+                args['arg'].append('pillar='+json.dumps(yaml.load(stream)))
+            except yaml.YAMLError as e:
+                print(e)
+    if batch_size:
+        args['batch'] = batch_size
+        args['client'] = 'local_batch'
+    if subset:
+        args['sub'] = int(subset)
+        args['client'] = 'local_subset'
+    return exec_rest_call(args)
+
+def exec_rest_call(args):
+    '''
+    Execute the API call to the salt-api
+    '''
+
+    token = get_token()
+    headers = { 'X-Auth-Token' : token, 'Accept' : 'application/json', 'content-type': 'application/json'}
+    data = json.dumps(args).encode("utf-8")
+    context = ssl.SSLContext(ssl.PROTOCOL_TLSv1)
+    request = urllib.request.Request(salturl, data, headers=headers)
+
+    try: 
+        d = urllib.request.urlopen(request, context=context).read().decode("utf-8")
+    except urllib.error.HTTPError as e:
+        sys.stderr.write("Error in request to salt-api: {}".format(e.read()))
+        sys.exit(1)
+    except urllib.error.URLError as e:
+        sys.stderr.write("Error in request to salt-api: {}".format(e.reason))
+        sys.exit(1)
+    try:
+        return json.loads(d)
+    except:
+        sys.stderr.write("Return data is not JSON")
+        sys.exit(1)
+
+def get_token():
+    '''
+    Get a auth token from the salt-api
+    '''
+
+    url = salturl + '/login'
+    data = urllib.parse.urlencode({
+        'username': username,
+        'password': password,
+        'eauth': eauth
+    }).encode("utf-8")
+    context = ssl.SSLContext(ssl.PROTOCOL_TLSv1)
+
+    try:
+        auth = urllib.request.urlopen(url, data, context=context).read().decode("utf-8")
+        return json.loads(auth)['return'][0]['token']
+    except urllib.error.HTTPError as e:
+        sys.stderr.write("Error Getting Token: {}".format(e.read()))
+        sys.exit(1)
+    except urllib.error.URLError as e:
+        sys.stderr.write("Error Getting Token: " + str(e.reason))
+        sys.exit(1)
+
+def valid_return(return_data):
+    '''
+    Check the return data for any failures.  Since every salt module returns data in a different manner this will be hard to do accurately.
+    Return false if any function id returns false in state.apply, state.sls or state.highstate
+    Return false if any other function returns false
+    Otherwise return true
+    '''
+
+    failure = False
+
+    if type(return_data.get('return')[0]) is not dict:
+        failure = True
+        return failure
+
+    if function.startswith('state'):
+        if return_data['return']:
+            for miniondata in return_data['return']:
+                for minion, data in miniondata.items():
+                    if type(data) is bool:
+                        if data == False:
+                            sys.stderr.write(minion+': Minion is unresponsive.  If the minion no longer exists delete it\'s key from the salt master.\n')
+                            continue
+                    if type(data) is not dict:
+                        sys.stderr.write(minion+': '+str(data)+'\n')
+                        continue
+                    else:
+                        if "retcode" in data:
+                            if data["retcode"] != 0:
+                                failure = True
+                        else:
+                            for state, results in data.items():
+                                if results.get('result') == False:
+                                    failure = True
+        else:
+            sys.stderr.write('ERROR: No minions responded\n')
+            failure = True
+    else:
+        for miniondata in return_data['return']:
+            for minion, data in miniondata.items():
+                if data == False:
+                    failure = True
+    return(failure)
+
+def listdict_to_dict(listdict):
+    '''
+    Convert a list of dictionaries to a single dictionary with
+    string values.
+    '''
+
+    if type(listdict[0]) is not dict:
+        return listdict
+    return_dict = {}
+    for d in listdict:
+        for key, value in d.items():
+          return_dict.update({key: str(value)})
+    return return_dict
+
+__init__()
+
+if saltclient == 'local':
+    results = local_client()
+
+    if not results:
+        sys.stderr.write('ERROR: No return received\n')
+
+    opts = {"color": True, "color_theme": None, "extension_modules": "/"}
+    if state_output == "changes":
+        opts.update({"state_verbose": False})
+    else:
+        opts.update({"state_verbose": True})
+    if function.startswith('state'):
+        out="highstate"
+    else:
+        out=None
+
+    if type(results['return'][0]) is not dict:
+        salt_outputter.display_output(results, out=out, opts=opts)
+    else:
+        for minion_result in results['return']:
+            salt_outputter.display_output(minion_result, out=out, opts=opts)
+
+    failure = valid_return(results)
+    if failure:
+        sys.exit(1)
+]]></param>
+          <param name="python-script-mode" value="code" />
+          <param name="python-ver" value="3" />
+          <param name="teamcity.step.mode" value="default" />
+        </parameters>
+      </runner>
+    </build-runners>
+    <requirements />
+  </settings>
+</meta-runner>
