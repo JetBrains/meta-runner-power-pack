@@ -163,6 +163,7 @@ def valid_return(return_data):
                             continue
                     if type(data) is not dict:
                         sys.stderr.write(minion+': '+str(data)+'\n')
+                        failure = True
                         continue
                     else:
                         if "retcode" in data:
