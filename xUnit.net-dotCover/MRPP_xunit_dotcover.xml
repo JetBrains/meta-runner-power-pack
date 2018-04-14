@@ -88,7 +88,7 @@ try {
 
     ## modify runner config if legacy v2 runtime activation mode required
     if ($xunitLegacy) {
-        Write-Host "Setting xunit to run with legacy activation policy"
+        Write-Output "Setting xunit to run with legacy activation policy"
         $config = [string]$xunit + ".config"
         $doc = (Get-Content $config) -as [Xml]
         $doc.configuration.startup.SetAttribute("useLegacyV2RuntimeActivationPolicy", "true")
@@ -127,7 +127,7 @@ try {
         throw New-Object System.Exception $message
     }
     else {
-        Write-Host "Found test assemblies: " $assemblies
+        Write-Output "Found test assemblies: " $assemblies
     }
 
     ## create single-line correctly formatted xunit argument
@@ -152,7 +152,7 @@ try {
     $settingsFileName = "coverage_settings.xml"
     $coverageLogFileName = "dotCoverXunitLog.txt"
 
-    Write-Host "##teamcity[message text='Run test coverage:  $dotCoverEnabled']"
+    Write-Output "##teamcity[message text='Run test coverage:  $dotCoverEnabled']"
 
     ## do we run coverage?
     if ($dotCoverEnabled) {
@@ -176,8 +176,8 @@ try {
         ## Run coverage
         $dotCover = Join-Path $dotCoverExecutable "dotCover.exe"
         $dotCoverArgs = "cover $settingsFileName /LogFile=$coverageLogFileName /ReturnTargetExitCode"
-        Write-Host "##teamcity[message text='dotCoverExecutable: $dotCoverExecutable']"
-        Write-Host "##teamcity[message text='dotCoverArgs: $dotCoverArgs']"
+        Write-Output "##teamcity[message text='dotCoverExecutable: $dotCoverExecutable']"
+        Write-Output "##teamcity[message text='dotCoverArgs: $dotCoverArgs']"
         $command = "$dotCover $dotCoverArgs"
         Write-Output "Executing dotCover via command: $command"
         Invoke-Expression $command
@@ -187,17 +187,17 @@ try {
         }
 
         ## Report coverage results and output build artifacts
-        Write-Host "##teamcity[importData type='dotNetCoverage' tool='dotcover' path='$outputFile']"
-        Write-Host "##teamcity[publishArtifacts '$settingsFileName']"
-        Write-Host "##teamcity[publishArtifacts '$coverageLogFileName']"
-        Write-Host "##teamcity[publishArtifacts '$outputFile']"
+        Write-Output "##teamcity[importData type='dotNetCoverage' tool='dotcover' path='$outputFile']"
+        Write-Output "##teamcity[publishArtifacts '$settingsFileName']"
+        Write-Output "##teamcity[publishArtifacts '$coverageLogFileName']"
+        Write-Output "##teamcity[publishArtifacts '$outputFile']"
 
         ## Optional generate report
         if ($dotCoverReportEnabled) {
             $reportCommand = "$dotCover report /source=$outputFile /output=$dotCoverReportFile /reportType=$dotCoverReportType"
             Write-Output "Creating dotCover report via command: $reportCommand"
             Invoke-Expression $reportCommand
-            Write-Host "##teamcity[publishArtifacts '$dotCoverReportFile']"
+            Write-Output "##teamcity[publishArtifacts '$dotCoverReportFile']"
         }
 
     }
@@ -209,8 +209,8 @@ try {
     }
 }
 catch {
-    Write-Host "##teamcity[buildStatus text='$_' status='FAILURE']"
-    Write-Host "##teamcity[message text='$_' status='ERROR']"
+    Write-Output "##teamcity[buildStatus text='$_' status='FAILURE']"
+    Write-Output "##teamcity[message text='$_' status='ERROR']"
     exit 1
 }]]></param>
         </parameters>
