@@ -171,14 +171,20 @@ try {
         # Avoid BOM http://stackoverflow.com/questions/5596982/using-powershell-to-write-a-file-in-utf-8-without-the-bom
         $encoding = New-Object System.Text.UTF8Encoding -ArgumentList $false # no byte order mark
         [System.IO.File]::WriteAllText($settingsFileName, $settingsXml, $encoding)
+        Write-Output "Wrote coverage parameters file to ${settingsFileName}: $settingsXml"
 
         ## Run coverage
         $dotCover = Join-Path $dotCoverExecutable "dotCover.exe"
-        $dotCoverArgs = " cover " + $settingsFileName + " /LogFile=$coverageLogFileName /ReturnTargetExitCode"
+        $dotCoverArgs = "cover $settingsFileName /LogFile=$coverageLogFileName /ReturnTargetExitCode"
         Write-Host "##teamcity[message text='dotCoverExecutable: $dotCoverExecutable']"
         Write-Host "##teamcity[message text='dotCoverArgs: $dotCoverArgs']"
-        $command = $dotCover + $dotCoverArgs
+        $command = "$dotCover $dotCoverArgs"
+        Write-Output "Executing dotCover via command: $command"
         Invoke-Expression $command
+
+        if ($LASTEXITCODE -ne 0) {
+            throw New-Object System.Exception "dotCover run failed with error code $LASTEXITCODE"
+        }
 
         ## Report coverage results and output build artifacts
         Write-Host "##teamcity[importData type='dotNetCoverage' tool='dotcover' path='$outputFile']"
@@ -188,14 +194,18 @@ try {
 
         ## Optional generate report
         if ($dotCoverReportEnabled) {
-            Invoke-Expression "$dotCover report /source=$outputFile /output=$dotCoverReportFile /reportType=$dotCoverReportType"
+            $reportCommand = "$dotCover report /source=$outputFile /output=$dotCoverReportFile /reportType=$dotCoverReportType"
+            Write-Output "Creating dotCover report via command: $reportCommand"
+            Invoke-Expression $reportCommand
             Write-Host "##teamcity[publishArtifacts '$dotCoverReportFile']"
         }
 
     }
     else {
         ## run xunit without coverage
-        Invoke-Expression "$xunit $xunitArg"
+        $xunitOnlyCommand = "$xunit $xunitArg"
+        Write-Output "Running unit tests without coverage via command: $xunitOnlyCommand"
+        Invoke-Expression $xunitOnlyCommand
     }
 }
 catch {
