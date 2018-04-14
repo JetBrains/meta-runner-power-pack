@@ -55,6 +55,8 @@ param (
     [string] $xUnitExe = "%xUnitNet.executable%",
     [string] $dotCoverExecutable = "%teamcity.tool.dotCover%",
     [boolean] $xunitLegacy = [System.Convert]::ToBoolean("%xUnitNet.executable.legacymode%"),
+    [Parameter()]
+    [ValidateNotNullOrEmpty()]
     [string] $assemblyFilter = "%xUnitNet.assembliesPath%",
     [string] $assemblyExcludeFilter = "%xUnitNet.assembliesExcludePath%",
     [string] $traits = "%xUnitNet.trait%",
@@ -73,7 +75,7 @@ $ErrorActionPreference = "Stop"
 try {
 
     ## get xunit runner from nuget package feed
-    iex "$nugetExe install xunit.runner.console -source $xUnitNuget"
+    Invoke-Expression "$nugetExe install xunit.runner.console -source $xUnitNuget"
     $xunit = Join-Path $workingDir "xunit.runner.console.*\tools\$xUnitExe" | Resolve-Path
 
     ## modify runner config if legacy v2 runtime activation mode required
@@ -102,7 +104,7 @@ try {
 
     foreach ($filterPath in $assemblyFilterPaths) {
         ## Search for the assemblies using wildcard pattern (Also filter out excluded assemblies)
-        $assembliesFromPath = (Get-ChildItem $filterPath.Trim() -Recurse -Exclude $excludedAssemblies.Trim() | select -ExpandProperty FullName)
+        $assembliesFromPath = (Get-ChildItem $filterPath.Trim() -Recurse -Exclude $excludedAssemblies.Trim() | Select-Object -ExpandProperty FullName)
         $assemblies += $assembliesFromPath
     }
 
@@ -125,10 +127,10 @@ try {
     # split multi-line xunit args into single line and correctly format
     $assemblyArg = "`"" + [String]::Join("`" `"", $assemblies) + "`""
     if ($traits.Length -gt 0) {
-        $traitArg = ($traits.Trim().Split("`r`n") | where {$_ -ne ""} | % { "-trait """ + $_ + """"}) -join " "
+        $traitArg = ($traits.Trim().Split("`r`n") | Where-Object {$_ -ne ""} | ForEach-Object { "-trait """ + $_ + """"}) -join " "
     }
     if ($notraits.Length -gt 0) {
-        $notraitArg = ($notraits.Trim().Split("`r`n") | where {$_ -ne ""} | % { "-notrait """ + $_ + """"}) -join " "
+        $notraitArg = ($notraits.Trim().Split("`r`n") | Where-Object {$_ -ne ""} | ForEach-Object { "-notrait """ + $_ + """"}) -join " "
     }
     $xunitArg = $assemblyArg, $traitArg, $notraitArg, $xunitArgs -join " "
 
@@ -162,24 +164,24 @@ try {
         Write-Host "##teamcity[message text='dotCoverExecutable: $dotCoverExecutable']"
         Write-Host "##teamcity[message text='dotCoverArgs: $dotCoverArgs']"
         $command = $dotCover + $dotCoverArgs
-        iex $command
+        Invoke-Expression $command
 
         ## Report coverage results and output build artifacts
-        write-host "##teamcity[importData type='dotNetCoverage' tool='dotcover' path='$outputFile']"
-        write-host "##teamcity[publishArtifacts '$settingsFileName']"
-        write-host "##teamcity[publishArtifacts '$coverageLogFileName']"
-        write-host "##teamcity[publishArtifacts '$outputFile']"
+        Write-Host "##teamcity[importData type='dotNetCoverage' tool='dotcover' path='$outputFile']"
+        Write-Host "##teamcity[publishArtifacts '$settingsFileName']"
+        Write-Host "##teamcity[publishArtifacts '$coverageLogFileName']"
+        Write-Host "##teamcity[publishArtifacts '$outputFile']"
 
         ## Optional generate report
         if ($dotCoverReportEnabled) {
-            iex "$dotCover report /source=$outputFile /output=$dotCoverReportFile /reportType=$dotCoverReportType"
-            write-host "##teamcity[publishArtifacts '$dotCoverReportFile']"
+            Invoke-Expression "$dotCover report /source=$outputFile /output=$dotCoverReportFile /reportType=$dotCoverReportType"
+            Write-Host "##teamcity[publishArtifacts '$dotCoverReportFile']"
         }
 
     }
     else {
         ## run xunit without coverage
-        iex "$xunit $xunitArg"
+        Invoke-Expression "$xunit $xunitArg"
     }
 }
 catch {
