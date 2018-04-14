@@ -73,7 +73,6 @@ param (
 $ErrorActionPreference = "Stop"
 
 try {
-
     ## get xunit runner from nuget package feed
     Invoke-Expression "$nugetExe install xunit.runner.console -source $xUnitNuget"
     $xunit = Join-Path $workingDir "xunit.runner.console.*\tools\$xUnitExe" | Resolve-Path
@@ -98,8 +97,12 @@ try {
 
     ## Process Assemblies to be Excluded
     ## split string into array if multiple wildcard path separated by comma(,) or newline
-    $assemblyExcludeFilterPaths = $assemblyExcludeFilter.Trim() -split {$_ -eq "," -or $_ -eq "`n" }
-    $excludedAssemblies = @()
+    $assemblyExcludeFilterPaths = @()
+    $excludedAssemblies = @("")
+
+    if ($assemblyExcludeFilter) {
+        $assemblyExcludeFilterPaths = $assemblyExcludeFilter.Trim() -split {$_ -eq "," -or $_ -eq "`n" }
+    }
 
     foreach ($filterExcludePath in $assemblyExcludeFilterPaths) {
         ## Concatenate each Assembly into the array
@@ -117,10 +120,11 @@ try {
         $assemblies += $assembliesFromPath
     }
 
-    if ($assemblies -eq $null) {
+    if (-not $assemblies) {
         $cwd = Get-Location
-        Write-Host "No test assemblies found; cwd = $cwd ; assembly filter = $assemblyFilter"
-        return
+        $message = "No test assemblies found; cwd = $cwd ; assembly filter = $assemblyFilter"
+        Write-Error $message
+        throw New-Object System.Exception $message
     }
     else {
         Write-Host "Found test assemblies: " $assemblies
