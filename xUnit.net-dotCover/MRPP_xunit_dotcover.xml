@@ -77,6 +77,15 @@ try {
     ## get xunit runner from nuget package feed
     Invoke-Expression "$nugetExe install xunit.runner.console -source $xUnitNuget"
     $xunit = Join-Path $workingDir "xunit.runner.console.*\tools\$xUnitExe" | Resolve-Path
+    
+    if (-not $xunit) {
+        # Try finding xunit under framework specific folder
+        $xunit = Join-Path $workingDir "xunit.runner.console.*\tools\net4*\$xUnitExe" | Resolve-Path
+    }
+
+    if (-not $xunit) {
+        throw New-Object System.Exception "Cannot find $xUnitExe after installing via nuget"
+    }
 
     ## modify runner config if legacy v2 runtime activation mode required
     if ($xunitLegacy) {
