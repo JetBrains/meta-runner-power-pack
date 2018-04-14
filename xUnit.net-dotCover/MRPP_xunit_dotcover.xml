@@ -156,7 +156,8 @@ try {
 </CoverageParams>
 "@
         # Avoid BOM http://stackoverflow.com/questions/5596982/using-powershell-to-write-a-file-in-utf-8-without-the-bom
-        $settingsXml | Out-File $settingsFileName -Encoding ASCII
+        $encoding = New-Object System.Text.UTF8Encoding -ArgumentList $false # no byte order mark
+        [System.IO.File]::WriteAllText($settingsFileName, $settingsXml, $encoding)
 
         ## Run coverage
         $dotCover = Join-Path $dotCoverExecutable "dotCover.exe"
