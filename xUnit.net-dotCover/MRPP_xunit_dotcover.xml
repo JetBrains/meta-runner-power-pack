@@ -13,6 +13,7 @@
       <param name="xUnitNet.trait" value="" spec="text description='only run tests with matching name/value traits, one name=value per line (e.x. name=value)' validationMode='any' label='Include Traits' display='normal'" />
       <param name="xUnitNet.notrait" value="Category=Integration" spec="text description='do not run tests with matching name/value traits, one name=value per line (e.x. name=value)' validationMode='any' label='Exclude Traits' display='normal'" />
       <param name="xUnitNet.dotCover.enable" value="true" spec="checkbox checkedValue='true' description='Enables or disables running test coverage with dotCover' uncheckedValue='false' label='Enable dotCover coverage' display='normal'" />
+      <param name="xUnitNet.dotCover.FilterFile" spec="text description='[Path to the file which contains DotCover Filters. Leave this blank if you wish to specify them in the field below instead.] - The path to your custom xml file which specifies coverage filters using the config format. Documentation http://www.jetbrains.com/dotcover/help/dotCover__Console_Runner_Commands.html' label='dotCover Filter File' display='normal'"></param>
       <param name="xUnitNet.dotCover.Filters" spec="text description='Specifies coverage filters using the config format. Documentation http://www.jetbrains.com/dotcover/help/dotCover__Console_Runner_Commands.html' label='dotCover Filters' validationMode='any' display='normal'"><![CDATA[<!-- Coverage filters. It's possible to use asterisks as wildcard symbols. -->
 <Filters>
   <IncludeFilters>
@@ -65,7 +66,8 @@ param (
     [boolean] $dotCoverReportEnabled = [System.Convert]::ToBoolean("%xUnitNet.dotCover.exportReport%"),
     [string] $dotCoverReportType = "%xUnitNet.dotCover.reportType%",
     [string] $dotCoverReportFile = "%xUnitNet.dotCover.reportOutputFile%",
-    [string] $dotCoverFilter = "%xUnitNet.dotCover.Filters%",
+    [string] $dotCoverFilterFile = "%xUnitNet.dotCover.FilterFile%",
+    [string] $dotCoverFilters = "%xUnitNet.dotCover.Filters%",
     [string] $dotCoverAttributeFilter = "%xUnitNet.dotCover.AttributeFilters%",
     [string] $xunitArgs = "%xUnitNet.executable.args%"
 )
@@ -151,6 +153,17 @@ try {
     $outputFile = "xunitcoverage.dcvr"
     $settingsFileName = "coverage_settings.xml"
     $coverageLogFileName = "dotCoverXunitLog.txt"
+
+    Write-Output "##teamcity[message text='Checking which filters to use']"
+    # overwrite filters with manual filter box if the filter file value is empty
+    if ([string]::IsNullOrEmpty($dotCoverFilterFile)) {
+        Write-Output "##teamcity[message text='dotCover Filter File field is empty, using the filters in dotCover Filters']"
+        $dotCoverFilter = $dotCoverFilters
+    } else {
+        Write-Output "##teamcity[message text='dotCover Filter File field is populated, using that']"
+        [xml] $dotCoverFilterXML = Get-Content -Path $dotCoverFilterFile
+        [string] $dotCoverFilter = $dotCoverFilterXML.OuterXml
+    }
 
     Write-Output "##teamcity[message text='Run test coverage:  $dotCoverEnabled']"
 
