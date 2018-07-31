@@ -70,24 +70,24 @@
 
                 <replaceregexp file="${tags.file}"
                             match="(\s+)"
-                            replace="&amp;lt;/tag&gt;&amp;lt;tag&gt;"
+                            replace="&lt;/tag&gt;&lt;tag&gt;"
                             flags="gm"
                 />
 
 
                 <loadfile srcFile="${tags.file}" property="prepared.tags" />
 
-                <echo file="${reqParams.file}">${prepared.tags}</echo>
+                <echo file="${reqParams.file}">&lt;tags&gt;&lt;tag&gt;${prepared.tags}&lt;/tag&gt;&lt;/tags&gt;</echo>
 
               </target>
 
               <target name="addTags" depends="prepare-tags">
                 <http url="%teamcity.serverUrl%/httpAuth/app/rest/8.0/builds/id:%teamcity.build.id%/tags"
                 method="POST"
-                expected="200"
+                expected="204"
                 printrequest="true">
                   <headers>
-                    <header name="Content-Type" value="text/plain" />
+                    <header name="Content-Type" value="application/xml" />
                   </headers>
                   <credentials username="${credentials.username}" password="${credentials.password}" />
                   <entity file="${reqParams.file}" binary="false" />
