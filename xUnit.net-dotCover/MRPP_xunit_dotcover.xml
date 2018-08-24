@@ -78,8 +78,28 @@ try {
     $xunit = Join-Path $workingDir "xunit.runner.console.*\tools\$xUnitExe" | Resolve-Path
     
     if (-not $xunit) {
+        Write-Output "Xunit $xunit not found; searching for highest-compatible version..."
+
         # Try finding xunit under framework specific folder
-        $xunit = Join-Path $workingDir "xunit.runner.console.*\tools\net4*\$xUnitExe" | Resolve-Path
+        $allXunitVersions = Join-Path $workingDir "xunit.runner.console.*\tools\net4*\$xUnitExe" | Resolve-Path
+
+        # Find which .Net Framework 4 is installed
+        $release = $(Get-ItemProperty -Path "HKLM:Software\Microsoft\NET Framework Setup\NDP\v4\Full" -Name Release -ErrorAction SilentlyContinue).Release
+
+        $frameworkVersion = switch($release) {
+            { 378389, 378675, 378758, 379893 -contains $_ } { "net452" } # .NET Framework 4.5, 4.5.1 and 4.5.2
+            { 393295, 393297 -contains $_ } { "net46" } # .NET Framework 4.6
+            { 394254, 394271 -contains $_ } { "net461" } # .NET Framework 4.6.1
+            { 394802, 394806 -contains $_ } { "net462" } # .NET Framework 4.6.2
+            { 460798, 460805 -contains $_ } { "net47" } # .NET Framework 4.7
+            { 461308, 461310 -contains $_ } { "net471" } # .NET Framework 4.7.1
+            { 461808, 461814 -contains $_ } { "net472" } # .NET Framework 4.7.2
+            default { "net472" }
+        }
+
+        $xunit = $allXunitVersions | Where-Object { $_ -match $frameworkVersion } | Select-Object -First 1
+
+        Write-Output "Selected xunit.exe at $xunit based on installed .Net Framework $frameworkVersion ($release)"
     }
 
     if (-not $xunit) {
