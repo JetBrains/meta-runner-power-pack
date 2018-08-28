@@ -35,6 +35,7 @@
   <AttributeFilterEntry>System.ObsoleteAttribute</AttributeFilterEntry>
 </AttributeFilters>]]></param>
       <param name="xUnitNet.dotCover.exportReport" value="false" spec="checkbox checkedValue='true' description='If enabled, it will add a report to the build artifacts' uncheckedValue='false' label='Export dotCover report' display='normal'" />
+      <param name="xUnitNet.dotCover.skipProcesses" value="" spec="text description='Comma or semicolon delimited list of processes to skip coverage on. Example: sqlservr.exe;pwsh.exe' validationMode='any' label='Skip Processes' display='normal'" />
       <param name="xUnitNet.dotCover.reportType" value="html" spec="select display='normal' description='The dotCover report type' label='ReportType' data_2='JSON' data_1='HTML' data_4='NDependXML' data_3='XML'" />
       <param name="xUnitNet.dotCover.reportOutputFile" value="dotCoverReport.html" spec="text description='the name of the report file to output' validationMode='any' label='Report FileName' display='normal'" />
     </parameters>
@@ -66,6 +67,7 @@ param (
     [string] $dotCoverReportType = "%xUnitNet.dotCover.reportType%",
     [string] $dotCoverReportFile = "%xUnitNet.dotCover.reportOutputFile%",
     [string] $dotCoverFilter = "%xUnitNet.dotCover.Filters%",
+    [string] $dotCoverSkipProcesses = "%xUnitNet.dotCover.skipProcesses%",
     [string] $dotCoverAttributeFilter = "%xUnitNet.dotCover.AttributeFilters%",
     [string] $xunitArgs = "%xUnitNet.executable.args%"
 )
@@ -173,9 +175,14 @@ try {
         [System.IO.File]::WriteAllText($settingsFileName, $settingsXml, $encoding)
         Write-Output "Wrote coverage parameters file to ${settingsFileName}: $settingsXml"
 
+        ## Add process filters if specified
+        if ($dotCoverSkipProcesses) {
+            $processFilters = "/ProcessFilters=-:$([System.String]::Join(';-:', $dotCoverSkipProcesses.Split(@(',',';'), [System.StringSplitOptions]::RemoveEmptyEntries)))"
+        }
+
         ## Run coverage
         $dotCover = Join-Path $dotCoverExecutable "dotCover.exe"
-        $dotCoverArgs = "cover $settingsFileName /LogFile=$coverageLogFileName /ReturnTargetExitCode"
+        $dotCoverArgs = " cover $settingsFileName /LogFile=$coverageLogFileName /ReturnTargetExitCode $processFilters"
         Write-Output "##teamcity[message text='dotCoverExecutable: $dotCoverExecutable']"
         Write-Output "##teamcity[message text='dotCoverArgs: $dotCoverArgs']"
         $command = "$dotCover $dotCoverArgs"
@@ -199,7 +206,6 @@ try {
             Invoke-Expression $reportCommand
             Write-Output "##teamcity[publishArtifacts '$dotCoverReportFile']"
         }
-
     }
     else {
         ## run xunit without coverage
