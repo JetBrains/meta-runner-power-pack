@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<meta-runner name="execute custom shell script">
+  <description>Executes inline script with given shell. Based on Ant and Commandline runners</description>
+  <settings>
+    <parameters>
+      <param name="content" spec="text description='Type your code here' label='Script content:' validationMode='any' display='prompt'"><![CDATA[echo -n "hello, "
+echo "world!"]]></param>
+      <param name="exec_shell" value="bash" spec="text display='normal' description='Specify shell to execute script' label='Specify shell' validationMode='any'" />
+      <param name="shell_args" value=" " spec="text display='normal' label='optional shell arguments' validationMode='any'" />
+      <param name="system.del.file" value="true" spec="checkbox label='Delete temporary script file' uncheckedValue='false' display='prompt' checkedValue='true'" />
+      <param name="system.dest.file" value="script_%build.counter%" spec="text label='Destination file:' validationMode='not_empty' display='hidden'" />
+    </parameters>
+    <build-runners>
+      <runner name="generate script file" type="Ant">
+        <parameters>
+          <param name="build-file">&lt;project name="Create file"&gt;
+
+&lt;target name="generating_script"&gt;
+&lt;echo file="${dest.file}"&gt;&lt;![CDATA[%content%]]&gt;&lt;/echo&gt;
+&lt;/target&gt;
+
+&lt;/project&gt;</param>
+          <param name="build-file-path" value="build.xml" />
+          <param name="target" value="generating_script" />
+          <param name="teamcity.step.mode" value="default" />
+          <param name="use-custom-build-file" value="true" />
+        </parameters>
+      </runner>
+      <runner name="execute generated script" type="simpleRunner">
+        <parameters>
+          <param name="command.executable" value="%exec_shell%" />
+          <param name="command.parameters" value="%shell_args% %system.dest.file%" />
+          <param name="teamcity.step.mode" value="default" />
+        </parameters>
+      </runner>
+      <runner name="remove temp.file" type="Ant">
+        <parameters>
+          <param name="build-file"><![CDATA[<project name="Create file">
+
+<target name="checkDelete">
+    <condition property="needDelete">
+      <equals arg1="${del.file}" arg2="true" />
+    </condition>
+</target>
+
+<target name="remove_temp_script"
+  if="needDelete"
+  depends="checkDelete">
+  <delete file="${dest.file}"/>
+</target>
+
+</project>]]></param>
+          <param name="build-file-path" value="build.xml" />
+          <param name="target" value="remove_temp_script" />
+          <param name="teamcity.step.mode" value="default" />
+          <param name="use-custom-build-file" value="true" />
+        </parameters>
+      </runner>
+    </build-runners>
+    <requirements />
+  </settings>
+</meta-runner>
