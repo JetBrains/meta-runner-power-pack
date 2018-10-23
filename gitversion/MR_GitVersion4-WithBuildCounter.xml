@@ -192,7 +192,7 @@ try {
           Write-Host "##teamcity[setParameter name='system.GitVersion.$name' value='$val']"
        }
        $semVer = $json.SemVer
-       Write-Host "##teamcity[buildNumber '$semVer+build%build.counter%']"
+       Write-Host "##teamcity[buildNumber '$($semVer)+build%build.counter%']"
     }
 }
 catch {
