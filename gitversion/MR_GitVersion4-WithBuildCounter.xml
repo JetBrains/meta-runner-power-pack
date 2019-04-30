@@ -177,7 +177,7 @@ try {
     }
 
     Write-Host "##teamcity[progressMessage 'Running: $gitversion $safeArgs']"
-    $gvOutput = Invoke-Expression "gitversion $arguments" | Out-String
+    $gvOutput = Invoke-Expression "$gitversion $arguments" | Out-String
     if ($LASTEXITCODE -ne 0) {
         throw "Error running GitVersion"
     }
