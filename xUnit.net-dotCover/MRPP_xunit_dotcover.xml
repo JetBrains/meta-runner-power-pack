@@ -194,6 +194,7 @@ try {
         }
 
         ## Report coverage results and output build artifacts
+        Write-Host "##teamcity[dotNetCoverage dotcover_home='$dotCoverExecutable']"
         Write-Output "##teamcity[importData type='dotNetCoverage' tool='dotcover' path='$outputFile']"
         Write-Output "##teamcity[publishArtifacts '$settingsFileName']"
         Write-Output "##teamcity[publishArtifacts '$coverageLogFileName']"
