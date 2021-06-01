@@ -70,7 +70,7 @@
 
                 <replaceregexp file="${tags.file}"
                             match="(\s+)"
-                            replace="&lt;/tag&gt;&lt;tag&gt;"
+                            replace="' /&gt;&lt;tag name='"
                             flags="gm"
                 />
 
