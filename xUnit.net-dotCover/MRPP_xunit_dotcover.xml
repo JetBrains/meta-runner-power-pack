@@ -81,7 +81,7 @@ try {
     
     if (-not $xunit) {
         # Try finding xunit under framework specific folder
-        $xunit = Join-Path $workingDir "xunit.runner.console.*\tools\net4*\$xUnitExe" | Resolve-Path
+        $xunit = Join-Path $workingDir "xunit.runner.console.*\tools\net4*\$xUnitExe" | Resolve-Path | Sort-Object | Select-Object -Last 1
     }
 
     if (-not $xunit) {
