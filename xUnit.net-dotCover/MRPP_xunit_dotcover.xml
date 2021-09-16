@@ -54,7 +54,7 @@ param (
     [string] $nugetExe = "%xUnitNet.nugetExe%\tools\nuget.exe",
     [string] $xUnitNuget = "%xUnitNet.nugetSource%",
     [string] $xUnitExe = "%xUnitNet.executable%",
-    [string] $dotCoverExecutable = "%teamcity.tool.dotCover%",
+    [string] $dotCoverExecutable = "%teamcity.tool.JetBrains.dotCover.CommandLineTools.bundled%",
     [boolean] $xunitLegacy = [System.Convert]::ToBoolean("%xUnitNet.executable.legacymode%"),
     [Parameter()]
     [ValidateNotNullOrEmpty()]
