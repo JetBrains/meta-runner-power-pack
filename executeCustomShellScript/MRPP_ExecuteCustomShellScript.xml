@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<meta-runner name="execute custom shell script">
+  <description>Executes inline script with given shell. Based on Ant runner</description>
+  <settings>
+    <parameters>
+      <param name="content" spec="text description='Type your code here' label='Script content:' validationMode='any' display='prompt'"><![CDATA[echo -n "hello, "
+echo "world!"]]></param>
+      <param name="exec_shell" value="bash" spec="text display='normal' description='Specify shell to execute script' label='Specify shell' validationMode='any'" />
+      <param name="shell_args" value="-e" spec="text display='normal' label='optional shell arguments' validationMode='any'" />
+      <param name="system.del.file" value="true" spec="checkbox label='Delete temporary script file' uncheckedValue='false' display='prompt' checkedValue='true'" />
+    </parameters>
+    <build-runners>
+      <runner name="" type="Ant">
+        <parameters>
+          <param name="build-file">&lt;project name="Exec shell script"&gt;
+
+&lt;target name="generate_and_run_script"&gt;
+  &lt;tempfile property="temp.file"/&gt;
+
+  &lt;echo file="${temp.file}"&gt;&lt;![CDATA[%content%]]&gt;&lt;/echo&gt;
+
+  &lt;exec executable="%exec_shell%"&gt;
+      &lt;arg line="%shell_args% ${temp.file}"/&gt;
+  &lt;/exec&gt;
+
+  &lt;condition property="needDelete"&gt;
+      &lt;equals arg1="${del.file}" arg2="true" /&gt;
+  &lt;/condition&gt;
+  &lt;echo message="del tmp scriptfile =&gt; ${del.file}"/&gt;
+
+  &lt;antcall target="remove_temp_script" inheritAll="true"&gt;
+     &lt;param name="param1" value="value"/&gt;
+  &lt;/antcall&gt;
+
+&lt;/target&gt;
+
+&lt;target name="remove_temp_script" if="needDelete"&gt;
+  &lt;delete file="${temp.file}"/&gt;
+&lt;/target&gt;
+
+&lt;/project&gt;</param>
+          <param name="build-file-path" value="build.xml" />
+          <param name="target" value="generate_and_run_script" />
+          <param name="teamcity.step.mode" value="default" />
+          <param name="use-custom-build-file" value="true" />
+        </parameters>
+      </runner>
+    </build-runners>
+    <requirements />
+  </settings>
+</meta-runner>
+
