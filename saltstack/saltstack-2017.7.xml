@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<meta-runner name="SaltStack">
-  <description>Run a SaltStack execution module through the salt-api service</description>
+<meta-runner name="SaltStack-2017.7.2">
+  <description>Run a SaltStack execution module through the salt-api service.  Compatible with Salt version 2017.7.0 or greater</description>
   <settings>
     <parameters>
       <param name="system.SALTARGUMENTS" value="" spec="text description='Argument for the salt module. for state.sls this will be the name of the state.' label='Argument for the salt module' validationMode='any' display='normal'" />
@@ -22,30 +22,34 @@
       <runner name="Deploy" type="python">
         <parameters>
           <param name="bitness" value="*" />
-          <param name="python-exe" value="%Python.2%" />
+          <param name="python-exe" value="%Python.3%" />
           <param name="python-kind" value="*" />
-          <param name="python-script-code"><![CDATA[# -*- coding: utf-8 -*-
+          <param name="python-script-code"><![CDATA[
+#!/usr/bin/python3
 '''
 Send a message to a SaltStack API
 '''
-import urllib2, urllib, json, yaml, ssl, sys
+import urllib.request, urllib.parse, urllib.error, json, ssl, sys, yaml
+
 try:
     import salt.output as salt_outputter
-except:
-    raise("the salt python module is required.  Install it with 'pip install salt' on the TeamCity agent.  The salt-minion and salt-master packages are not required.")
+except ImportError:
+    raise ImportError("The salt python3 module is required.  Install it with 'pip3 download salt' on the TeamCity agent.  The salt-minion and salt-master packages are not required.")
+    sys.exit(1)
 
 def __init__():
     '''
     Set gloval vars.  These are replaced with env variables from TeamCity
     '''
-    global saltclient, salturl, eauth, username, password, batch, target, expr_form, function, arguments, pillar, batch_size, subset, kwargs, state_output
+
+    global saltclient, salturl, eauth, username, password, batch, target, tgt_type, function, arguments, pillar, batch_size, subset, kwargs, state_output
     saltclient = '%system.SALTCLIENT%'
     salturl = '%system.SALTURL%'
     eauth = '%system.SALTEAUTH%'
     username = '%system.SALTUSERNAME%'
     password = '%system.SALTPASSWORD%'
     target = '%system.SALTTARGET%'
-    expr_form = '%system.SALTEXPRFORM%'
+    tgt_type = '%system.SALTEXPRFORM%'
     function = '%system.SALTFUNCTION%'
     arguments = '%system.SALTARGUMENTS%'
     pillar = '%system.SALTPILLAR%'
@@ -64,7 +68,7 @@ def local_client():
     '''
     args = {
         'tgt': target,
-        'expr_form': expr_form,
+        'tgt_type': tgt_type,
         'client': 'local',
         'fun': function,
         'arg': []
@@ -89,149 +93,140 @@ def local_client():
 
 def exec_rest_call(args):
     '''
-    Execute the restful call to the saltmaster
+    Execute the API call to the salt-api
     '''
-    #Login and get a token
-    token = get_token()
 
-    headers = { 'X-Auth-Token' : token, 'Accept' : 'application/json', 'Content-Type' : 'application/json' }
-    data = json.dumps(args)
-    gcontext = ssl.SSLContext(ssl.PROTOCOL_TLSv1)
-    request = urllib2.Request(salturl, data, headers=headers)
+    token = get_token()
+    headers = { 'X-Auth-Token' : token, 'Accept' : 'application/json', 'content-type': 'application/json'}
+    data = json.dumps(args).encode("utf-8")
+    context = ssl.SSLContext(ssl.PROTOCOL_TLSv1)
+    request = urllib.request.Request(salturl, data, headers=headers)
 
     try: 
-        d = urllib2.urlopen(request, timeout=3600, context=gcontext).read()
-    except urllib2.HTTPError, e:
-        print("Error in API Call: " + e.read())
+        d = urllib.request.urlopen(request, context=context).read().decode("utf-8")
+    except urllib.error.HTTPError as e:
+        sys.stderr.write("Error in request to salt-api: {}".format(e.read()))
         sys.exit(1)
-    except urllib2.URLError, e:
-        print("Error in API Call: " + str(e.reason))
+    except urllib.error.URLError as e:
+        sys.stderr.write("Error in request to salt-api: {}".format(e.reason))
         sys.exit(1)
-    except httplib.HTTPException, e:
-        print("Error in API Call: socket error")
-        sys.exit(1)
-    except: 
-        print("Error Getting in API Call")
-        sys.exit(1)
-
-    #print("Raw Return:" +d)
     try:
         return json.loads(d)
     except:
-        print("Return data is not JSON")
+        sys.stderr.write("Return data is not JSON")
         sys.exit(1)
+
 def get_token():
     '''
-    Login and get a auth token from the salt master
+    Get a auth token from the salt-api
     '''
+
     url = salturl + '/login'
-    params = urllib.urlencode({
+    data = urllib.parse.urlencode({
         'username': username,
         'password': password,
         'eauth': eauth
-    })
-    gcontext = ssl.SSLContext(ssl.PROTOCOL_TLSv1)
+    }).encode("utf-8")
+    context = ssl.SSLContext(ssl.PROTOCOL_TLSv1)
 
     try:
-        auth = urllib2.urlopen(url, params, context=gcontext).read()
+        auth = urllib.request.urlopen(url, data, context=context).read().decode("utf-8")
         return json.loads(auth)['return'][0]['token']
-    except urllib2.HTTPError, e:
-        print("Error Getting Token: " + e.read())
+    except urllib.error.HTTPError as e:
+        sys.stderr.write("Error Getting Token: {}".format(e.read()))
         sys.exit(1)
-    except urllib2.URLError, e:
-        print("Error Getting Token: " + str(e.reason))
+    except urllib.error.URLError as e:
+        sys.stderr.write("Error Getting Token: " + str(e.reason))
         sys.exit(1)
-    except httplib.HTTPException, e:
-        print("Error Getting Token: socket error")
-        sys.exit(1)
-    except:
-        print("Error Getting Token")
-        sys.exit(1)
-
-def normalize_local(results):
-    '''
-    Data is returned in different structure when in batch mode: https://github.com/saltstack/salt/issues/32459
-    Make these results the same shape as batch returns here
-    '''
-    e = {"return": []}
-    for key, value in results['return'][0].iteritems():
-        e['return'].append({key:value })
-    return e
 
 def valid_return(return_data):
     '''
     Check the return data for any failures.  Since every salt module returns data in a different manner this will be hard to do accurately.
-    1.  If the function is a state.appply, state.sls or state.highstate return true only if all state id's return true
-    2.  For any other function look for a return of true
-    *.  Otherwise return false
+    Return false if any function id returns false in state.apply, state.sls or state.highstate
+    Return false if any other function returns false
+    Otherwise return true
     '''
 
-    failure = 0
+    failure = False
+
+    if type(return_data.get('return')[0]) is not dict:
+        failure = True
+        return failure
+
     if function.startswith('state'):
-        if type(return_data) is not dict:
-            if type(return_data) is list:
-                for error in return_data:
-                    sys.stderr.write(error+'\n')
-            elif type(return_data) is str:
-                sys.stderr.write(return_data)
-            failure = 1
-        else:
-            if return_data['return']:
-                for miniondata in return_data['return']:
-                    for minion, data in miniondata.iteritems():
-                        if type(data) is not dict:
-                            sys.stderr.write(minion+': '+str(data)+'\n')
-                            failure = 1
+        if return_data['return']:
+            for miniondata in return_data['return']:
+                for minion, data in miniondata.items():
+                    if type(data) is bool:
+                        if data == False:
+                            sys.stderr.write(minion+': Minion is unresponsive.  If the minion no longer exists delete it\'s key from the salt master.\n')
+                            continue
+                    if type(data) is not dict:
+                        sys.stderr.write(minion+': '+str(data)+'\n')
+                        failure = True
+                        continue
+                    else:
+                        if "retcode" in data:
+                            if data["retcode"] != 0:
+                                failure = True
                         else:
-                            if "retcode" in data:
-                                if data["retcode"] != 0:
-                                    failure = 1
-                            else:
-                                for state, results in data.iteritems():
-                                    if results.get('result', True) == False:
-                                        failure = 1
-            else:
-                sys.stderr.write('ERROR: No minions responded\n')
-                failure = 1
+                            for state, results in data.items():
+                                if results.get('result') == False:
+                                    failure = True
+        else:
+            sys.stderr.write('ERROR: No minions responded\n')
+            failure = True
     else:
         for miniondata in return_data['return']:
-            for minion, data in miniondata.iteritems():
+            for minion, data in miniondata.items():
                 if data == False:
-                    failure = 1
+                    failure = True
     return(failure)
 
+def listdict_to_dict(listdict):
+    '''
+    Convert a list of dictionaries to a single dictionary with
+    string values.
+    '''
+
+    if type(listdict[0]) is not dict:
+        return listdict
+    return_dict = {}
+    for d in listdict:
+        for key, value in d.items():
+          return_dict.update({key: str(value)})
+    return return_dict
+
 __init__()
+
 if saltclient == 'local':
     results = local_client()
 
     if not results:
         sys.stderr.write('ERROR: No return received\n')
-        sys.exit(2)
 
     opts = {"color": True, "color_theme": None, "extension_modules": "/"}
     if state_output == "changes":
         opts.update({"state_verbose": False})
     else:
         opts.update({"state_verbose": True})
-    #local returns comes back in a weird shape.  But batch returns are ok.  Juts make all returns look like batch.  I still need to test this with subset
-    if not batch_size:
-        results = normalize_local(results)
     if function.startswith('state'):
         out="highstate"
     else:
         out=None
 
-    for minion_result in results['return']:
-        for minion, data in minion_result.iteritems():
-            if "ret" in data:
-                data[minion] = data.pop('ret')
-                salt_outputter.display_output(data, out=out, opts=opts)
-            else:
-                salt_outputter.display_output(minion_result, out=out, opts=opts)
-    sys.exit(valid_return(results))
+    if type(results['return'][0]) is not dict:
+        salt_outputter.display_output(results, out=out, opts=opts)
+    else:
+        for minion_result in results['return']:
+            salt_outputter.display_output(minion_result, out=out, opts=opts)
+
+    failure = valid_return(results)
+    if failure:
+        sys.exit(1)
 ]]></param>
           <param name="python-script-mode" value="code" />
-          <param name="python-ver" value="2" />
+          <param name="python-ver" value="3" />
           <param name="teamcity.step.mode" value="default" />
         </parameters>
       </runner>
