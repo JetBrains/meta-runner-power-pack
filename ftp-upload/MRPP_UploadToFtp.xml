@@ -37,6 +37,7 @@
 <target name="put-files" depends="prepare-ftp, clean-remote-dir, create-remote-dir">
 
 <ftp server="${ftp.server}" 
+  passive="true"
   port="${ftp.port}"
   userid="${ftp.user}"
   password="${ftp.password}"
@@ -54,6 +55,7 @@
 <target name="create-remote-dir" if="dest.dir.set">
 <ftp action="mkdir"
      server="${ftp.server}"
+     passive="true"
      port="${ftp.port}"
      userid="${ftp.user}"
      password="${ftp.password}"
@@ -64,6 +66,7 @@
 <target name="clean-remote-dir" if="clean.dest.dir.set">
 <ftp action="del"
      server="${ftp.server}"
+     passive="true"
      port="${ftp.port}"
      userid="${ftp.user}"
      password="${ftp.password}"
