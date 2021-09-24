@@ -1,0 +1,48 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<meta-runner name="Assembly Attributes Patcher">
+  <description>Replace assembly ralated attributes' values</description>
+  <settings>
+    <parameters>
+      <param name="AssemblyVersion" value="" spec="text description='Specifies the version of the assembly being attributed.'" />
+      <param name="AssemblyFileVersion" value="" spec="text description='Instructs a compiler to use a specific version number for the Win32 file version resource.'" />
+      <param name="AssemblyInformationalVersion" value="" spec="text description='Defines additional version information for an assembly manifest.'" />
+    </parameters>
+    <build-runners>
+      <runner name="Replace assembly version" type="jetbrains_powershell">
+        <parameters>
+          <param name="jetbrains_powershell_bitness" value="x86" />
+          <param name="jetbrains_powershell_execution" value="PS1" />
+          <param name="jetbrains_powershell_script_code"><![CDATA[function Replace-String{
+    [CmdletBinding()]
+    param([Parameter(ValueFromPipeline)]$Path, $OldString, $NewString)
+    process{    
+        foreach($p in $path){
+            $content = Get-Content -Path $p -Raw  
+            $content -replace $OldString,$NewString | Set-Content -Path $p -Encoding UTF8 -Force
+            Write-Host "`t$p"
+        }
+    }
+}
+
+function Replace-AttributeValue($AttributeName, $Version){
+    if([String]::IsNullOrWhiteSpace($Version) -eq $false)
+    {
+        Write-Host "Set $AttributeName to $Version in:"
+        $pattern = "assembly\s*:\s*$AttributeName\(\s*`".*?`"\s*\)"
+        Get-ChildItem AssemblyInfo.cs -recurse |  select-string $pattern -List | Select-Object -ExpandProperty Path | Replace-String -OldString $pattern -NewString "assembly: $AttributeName(`"$Version`")"
+    }
+}
+
+Write-Host "AssemblyPatcher START in $(Get-Location)"
+Replace-AttributeValue -AttributeName "AssemblyVersion" -Version "%AssemblyVersion%"
+Replace-AttributeValue -AttributeName "AssemblyFileVersion" -Version "%AssemblyFileVersion%"
+Replace-AttributeValue -AttributeName "AssemblyInformationalVersion" -Version "%AssemblyInformationalVersion%"
+Write-Host "AssemblyPatcher FINISH"]]></param>
+          <param name="jetbrains_powershell_script_mode" value="CODE" />
+          <param name="teamcity.step.mode" value="default" />
+        </parameters>
+      </runner>
+    </build-runners>
+    <requirements />
+  </settings>
+</meta-runner>
