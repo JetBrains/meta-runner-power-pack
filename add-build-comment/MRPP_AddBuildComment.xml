@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE build-type SYSTEM "../../../project-config.dtd">
+
+<build-type>
+  <name>Add Build Comment</name>
+  <description />
+  <settings>
+    <parameters>
+      <param name="system.username" value="" spec="text description='Username of the user who performs the action. Create commenter user with view project and comment build permissions.' display='normal' label='Username:'" />
+      <param name="system.password" value="" spec="password description='Password of the user who performs the action. Create commenter user with view project and comment build permissions.' display='normal' label='Password:'" />
+      <param name="system.comment" value="" spec="text description='Comment text.' display='normal' label='Comment:' validationMode='not_empty'" />
+    </parameters>
+    <build-runners>
+      <runner name="Add Build Comment" type="Ant">
+        <parameters>
+          <param name="build-file">
+	<![CDATA[<project name="Add build comment">
+  
+              <taskdef name="http" classname="org.missinglink.ant.task.http.HttpClientTask" />
+
+              <property name="reqParams.file" location="${teamcity.build.tempDir}/comment.txt" />
+
+              <condition property="should.use.custom.credentials">
+                <and>
+                  <length string="${username}" trim="true" when="greater" length="0" />
+                  <length string="${password}" trim="true" when="greater" length="0" />
+                </and>
+              </condition>
+
+              <target name="prepare-custom-credentials" if="should.use.custom.credentials">
+                <echo>using custom credentials</echo>
+	              <property name="credentials.username" value="${username}" />
+	              <property name="credentials.password" value="${password}" />
+              </target>
+
+              <target name="prepare-internal-credentials" unless="should.use.custom.credentials">
+                <echo>using internal credentials</echo>
+	              <property name="credentials.username" value="${teamcity.auth.userId}" />
+	              <property name="credentials.password" value="${teamcity.auth.password}" />
+              </target>
+              
+
+              <target name="prepare-comment" depends="prepare-internal-credentials,prepare-custom-credentials">
+                <echo file="${reqParams.file}">${comment}</echo>
+              </target>
+
+              <target name="addComment" depends="prepare-comment">
+                <http url="%teamcity.serverUrl%/httpAuth/app/rest/2018.1/builds/id:%teamcity.build.id%/comment"
+                method="PUT"
+                expected="204"
+                printrequest="true">
+                  <credentials username="${credentials.username}" password="${credentials.password}" />
+                  <entity file="${reqParams.file}" binary="false" />
+                </http>
+              </target>
+
+            </project>]]></param>
+          <param name="build-file-path" value="build.xml" />
+          <param name="target" value="addComment" />
+          <param name="runnerArgs" value="-lib %teamcity.tool.ant-net-tasks%" />
+          <param name="teamcity.coverage.emma.include.source" value="true" />
+          <param name="teamcity.coverage.emma.instr.parameters" value="-ix -*Test*" />
+          <param name="teamcity.coverage.idea.includePatterns" value="*" />
+          <param name="teamcity.step.mode" value="default" />
+          <param name="use-custom-build-file" value="true" />
+        </parameters>
+      </runner>
+    </build-runners>
+    <vcs-settings checkout-mode="ON_SERVER" labeling-type="NONE" labeling-pattern="build-%system.build.number%" />
+    <requirements />
+    <build-triggers />
+    <cleanup />
+  </settings>
+</build-type>
+
