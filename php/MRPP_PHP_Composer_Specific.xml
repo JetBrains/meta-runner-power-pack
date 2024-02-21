@@ -27,7 +27,7 @@
 </target>
 
 <target name="getComposer" depends="create-composer-dest-dir">
-  <get src="https://getcomposer.org/composer.phar" dest="${composer.dest.dir}" verbose="on" skipexisting="false"/>
+  <get src="https://getcomposer.org/composer-stable.phar" dest="${composer.dest.dir}/composer.phar" verbose="on" skipexisting="false"/>
 </target>
 
 <target name="create-composer-dest-dir">
