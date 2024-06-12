@@ -19,6 +19,7 @@
       <param name="mr.GitVersion.projArgs" value="" spec="text description='If an MSBuild file is specified then arguments to pass to MSBuild.' display='normal' label='MSBuild Arguments:'" />
       <param name="mr.GitVersion.updateAssemblyInfo" value="false" spec="checkbox checkedValue='true' description='Update any AssemblyInfo files while running the Executable or MSBuild file?' display='normal' label='Update AssemblyInfo Files:' uncheckedValue='false'" />
       <param name="mr.GitVersion.updateAssemblyInfoFileName" value="" spec="text description='If Update AssemblyInfo Files is specified then name of AssemblyInfo file to update.' display='normal' label='Update AssemblyInfo File Name:'" />
+      <param name="mr.GitVersion.ensureAssemblyInfo" value="false" spec="checkbox checkedValue='true' description='Ensure to create lines in AssemblyInfo?' display='normal' label='Ensure AssemblyInfo:' uncheckedValue='false'" />
       <param name="mr.GitVersion.updateGitVersion" value="false" spec="checkbox checkedValue='true' description='Use Chocolatey to check whether a new version of GitVersion is available?' display='normal' label='Update GitVersion:' uncheckedValue='false'" />
     </parameters>
     <build-runners>
@@ -30,8 +31,7 @@
           <param name="jetbrains_powershell_script_mode" value="CODE" />
           <param name="jetbrains_powershell_bitness" value="x86" />
           <param name="teamcity.step.mode" value="default" />
-          <param name="jetbrains_powershell_script_code"><![CDATA[
-[CmdletBinding()]
+          <param name="jetbrains_powershell_script_code"><![CDATA[[CmdletBinding()]
 Param (
     [string] $workingDir = (Join-Path "%teamcity.build.workingDir%" "%mr.GitVersion.gitCheckoutDir%"),
     [string] $output = '%mr.GitVersion.output%',
@@ -49,6 +49,7 @@ Param (
     [string] $projArgs = '%mr.GitVersion.projArgs%',
     [string] $updateAssemblyInfo = '%mr.GitVersion.updateAssemblyInfo%',
     [string] $updateAssemblyInfoFileName = '%mr.GitVersion.updateAssemblyInfoFileName%',
+    [string] $ensureAssemblyInfo = '%mr.GitVersion.ensureAssemblyInfo%',
     [string] $updateGitVersion = '%mr.GitVersion.updateGitVersion%'
 )
 
@@ -108,6 +109,9 @@ function Build-Arguments() {
             $args = "$args /UpdateAssemblyInfo"
         }
     }
+	if($ensureAssemblyInfo -eq "true") {
+		$args = "$args /EnsureAssemblyInfo"
+	}
     if ($output -eq "json" -and (Test-IsSpecified $outputFile)) {
         $args = "$args > ""$outputFile"""
     }
@@ -187,11 +191,11 @@ catch {
     Write-Host "##teamcity[buildStatus text='$_' status='FAILURE']"
     Write-Host "##teamcity[message text='$_' status='ERROR']"
     exit 1
-}
-          ]]></param>
+}]]></param>
         </parameters>
       </runner>
     </build-runners>
     <requirements />
   </settings>
 </meta-runner>
+
