@@ -1,0 +1,157 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<meta-runner name="Powershell Copy Agent Files">
+  <description>Copy files from either agent's checkout or temp directory</description>
+  <settings>
+    <parameters>
+      <param name="FileRegexmatch" value="(.*)?bobbytables\.sql|(.*)?foo\.cmd" spec="text description='.NET Style Regex matched against full path of files' display='normal' label='Full Path Regex' validationMode='not_empty'" />
+      <param name="destUncPath" value="\\YOURSERVER\util\%system.teamcity.projectName%\%system.build.number%" spec="text description='It|'s advisable to include a unique sub directory as well -- which will be created if permissions allow.' display='normal' label='Full UNC Path' validationMode='not_empty'" />
+      <param name="mustFindFiles" value="0" spec="select data_1='0' data_3='1' description='Error when no full paths match the regex' display='normal' label='Error on No Matches' label_1='False' label_3='True'" />
+      <param name="useTmpDirInsteadOfWorking" value="0" spec="select data_1='0' data_3='1' description='Use the Agent|'s temp directory instead of the checkout/working directory' display='normal' label='Use Agent Temp Dir' label_1='False' label_3='True'" />
+      <param name="useRelativePaths" value="1" spec="select data_1='0' data_3='1' description='Recreate directory structure on the destination relative to the PWD' display='normal' label='Relative Paths' label_3='True'" />
+    </parameters>
+    <build-runners>
+      <runner name="Find and Copy Artifacts" type="jetbrains_powershell">
+        <parameters>
+          <param name="jetbrains_powershell_bitness" value="x64" />
+          <param name="jetbrains_powershell_execution" value="STDIN" />
+          <param name="jetbrains_powershell_noprofile" value="true" />
+          <param name="jetbrains_powershell_script_code"><![CDATA[#----------------------------------------------
+# NOTE: If you need access to build artifacts
+# Make sure to run the Publish Build Artifacts
+# metarunner INSTEAD of the usual build artifacts
+# method in General Settings. It still accepts
+# the same ANT-style foo/** => bar
+#
+# I am so sorry for the regex. I blame TC for
+# no multi-value variables
+#----------------------------------------------
+
+# Pass TC Vars to Powershell
+# You can also access env variables via ENV (e.g. ENV:foo_bar instead of foo.bar)
+
+# Set these up in Config Parameters
+$mustFindFiles = "%mustFindFiles%"
+$useTmpDirInsteadOfWorking = "%useTmpDirInsteadOfWorking%Z" # ZIP files made by TC go here instead of the checkout/working dir
+$FileRegexmatch = "%FileRegexmatch%"
+$destUncPath = "%destUncPath%"
+$useRelativePaths = "%useRelativePaths%"
+
+# Predefined TeamCity
+$buildTmpDir = "%system.teamcity.build.tempDir%"
+
+# -------------------------------------------------------------------------------------------
+# func
+# -------------------------------------------------------------------------------------------
+function Create-RelativePath {
+param(
+	[System.IO.FileInfo]$file,
+	[string]$destination
+)
+	$relativePath = ($file | Resolve-Path -Relative)
+	$relativePath = $relativePath.TrimStart('.')
+	$y = $relativePath.Split("\")
+	$relativeDir = ""
+	for ($i=0;$i -lt ($y.count - 1);$i++) {
+		if ($y[$i]) {
+			$relativeDir += "\$($y[$i])"
+		}
+	}
+	$fullPath = "$($destination)$($relativeDir)"
+	if (!(Test-Path $fullPath)) {
+		write-host "Creating $fullPath"
+		md $fullPath -force | out-null
+	}
+	$fullPath
+}
+
+# -------------------------------------------------------------------------------------------
+# script
+# -------------------------------------------------------------------------------------------
+write-host "Checking path $destUncPath"
+if (!(Test-Path $destUncPath)) {
+	md $destUncPath -force | out-null
+	if (!$?) {
+		throw "Could not create path $destUncPath"
+	}
+}
+
+$whereToSearch = '.'
+if (($useTmpDirInsteadOfWorking -eq "1") -or ($useTmpDirInsteadOfWorking -eq "true")) {
+	write-host "Setting search dir to $whereToSearch instead of $PWD"
+	$whereToSearch = $buildTmpDir
+}
+$whereToSearchPath = (Resolve-Path $whereToSearch).Path
+if (!$?) {
+	throw "Error resolving path $whereToSearch"
+}
+Set-Location $whereToSearchPath
+
+if ($FileRegexmatch) {
+	write-host "Matching .NET REGEX $FileRegexmatch against files in $buildTmpDir"
+	$fileMatches = @()
+	$fileMatchResults = @()
+	write-host "Gathering files in $whereToSearchPath"
+	$allFiles = gci $whereToSearchPath -r
+	foreach ($f in $allFiles) {
+		if ($f.fullname -match $FileRegexmatch) {
+			$fileMatches += $f
+			$fileMatchResults += new-object psobject -property @{
+						fullname = $f.fullname
+						match = $true
+						}
+			
+		} else {
+			$fileMatchResults += new-object psobject -property @{
+						fullname = $f.fullname
+						match = $false
+						}
+		}
+	}
+	$fileMatchResults = $fileMatchResults | Sort -Property match -descending
+	write-host "------------------------------------------------------------------"
+	write-host "File Match Results"
+	foreach ($fmr in $fileMatchResults) {
+		write-host "$($fmr.match) - $($fmr.fullname)"
+	}
+	write-host "------------------------------------------------------------------"
+	if ($fileMatches) {
+		$fileMatchesCount = ($fileMatches | Measure).Count
+		write-host "Found $fileMatchesCount Matching files."
+		$i = 1
+		$fileMatches | select -expand fullname | % { "[$($i)] $($_)"; $i++ }
+		$i = 1
+		foreach ($f in $fileMatches) {
+			if ($f) {
+				write-host "$($i) / $fileMatchesCount | $($f.fullname)"
+				if (($useRelativePaths -eq "1") -or ($useRelativePaths -eq "true")) {
+					write-host "$($i) / $fileMatchesCount | Checking relative path"
+					$destUncPath = Create-RelativePath -file $f -destination $destUncPath
+				}
+				write-host "$($i) / $fileMatchesCount | Copying to $destUncPath"
+				$f | cp -Destination $destUncPath
+				if (!$?) {
+					throw "$($i) / $fileMatchesCount | Error copying file $(f.fullname)"
+				} else {
+					write-host "$($i) / $fileMatchesCount | GREAT SUCCESS"
+				}
+			} else {
+				write-host "$($i) / $fileMatchesCount | Nothing to process"
+			}
+			$i++
+		}
+	} else {
+		if (($mustFindFiles -eq "1") -or ($mustFindFiles -eq "true")) {
+			Throw "No Files found matching "
+		}
+	}
+} else {
+	write-host "No regex supplied."
+}]]></param>
+          <param name="jetbrains_powershell_script_mode" value="CODE" />
+          <param name="teamcity.step.mode" value="default" />
+        </parameters>
+      </runner>
+    </build-runners>
+    <requirements />
+  </settings>
+</meta-runner>
