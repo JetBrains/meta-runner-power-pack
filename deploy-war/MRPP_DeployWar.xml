@@ -20,13 +20,13 @@
 <target name="prepare-cargo-task">
 <delete dir="${taskDir}"/>
 <mkdir dir="${taskDir}"/>
-<get src="http://repo1.maven.org/maven2/org/codehaus/cargo/cargo-core-uberjar/1.4.2/cargo-core-uberjar-1.4.2.jar"
+<get src="https://repo1.maven.org/maven2/org/codehaus/cargo/cargo-core-uberjar/1.4.2/cargo-core-uberjar-1.4.2.jar"
      dest="${taskDir}"/>
-<get src="http://repo1.maven.org/maven2/org/codehaus/cargo/cargo-ant/1.4.2/cargo-ant-1.4.2.jar"
+<get src="https://repo1.maven.org/maven2/org/codehaus/cargo/cargo-ant/1.4.2/cargo-ant-1.4.2.jar"
      dest="${taskDir}"/>
-<get src="http://repo1.maven.org/maven2/commons-discovery/commons-discovery/0.4/commons-discovery-0.4.jar"
+<get src="https://repo1.maven.org/maven2/commons-discovery/commons-discovery/0.4/commons-discovery-0.4.jar"
      dest="${taskDir}"/>
-<get src="http://repo1.maven.org/maven2/commons-logging/commons-logging/1.1.1/commons-logging-1.1.1.jar"
+<get src="https://repo1.maven.org/maven2/commons-logging/commons-logging/1.1.1/commons-logging-1.1.1.jar"
      dest="${taskDir}"/>
 
 <taskdef resource="cargo.tasks">
