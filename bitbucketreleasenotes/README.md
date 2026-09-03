@@ -4,10 +4,10 @@ Generates a release notes markdown file in the GitHub output format.
 
 ## Parameter List ##
 
-- **ConsumerKey** BitBuckets Consumer Key used for Oauth authentication
-- **ConsumerSecretKey** BitBuckets Consumer Secret Key used for Oauth authentication
+- **ConsumerKey** BitBucket's Consumer Key used for OAuth authentication
+- **ConsumerSecretKey** BitBucket's Consumer Secret Key used for OAuth authentication
 - **Username** Can be used instead of Consumer Key/Secret. The username to authenticate with
-- **Password** Can be used instead of Consumer Key/Secret. The username to authenticate with
+- **Password** Can be used instead of Consumer Key/Secret. The password to authenticate with
 - **Output File** Specifies the file in which release notes are generated
 - **Repo** Repository name, in Organisation/Repository format
 - **All Tags** Specifies that all tags should be included in the release notes, if not specified then only the issues since the last tag are included

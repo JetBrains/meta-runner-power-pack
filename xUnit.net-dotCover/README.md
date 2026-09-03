@@ -28,8 +28,8 @@ What it does
  
 * downloads the latest available console runner from a local or remote nuget feed
 * uses wildcard searching to find and run xUnit.net tests
-* (Optional) provides dotCover coverage reporting and statistics back to Teamcity.
-* return error codes to fail builds.
+* (Optional) provides dotCover coverage reporting and statistics back to TeamCity.
+* returns error codes to fail builds.
 * Supports both xUnit.net v1.x and v2.x test assemblies.
 * (Optional) generates dotCover report
 
