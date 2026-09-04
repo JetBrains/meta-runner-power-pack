@@ -39,7 +39,7 @@ x64 or x86. Determines where, along with MSBuild version,  PSBuild will look for
 Specifies the version of the [toolset](http://msdn.microsoft.com/en-us/library/vstudio/bb383796.aspx) to use to build the project. Default is 12.
 
 #### 4. Targets
-Builds the specified [targets](http://msdn.microsoft.com/en-us/library/vstudio/ms171462.aspx) in the project. Separate them by semicolon. If not set it will the default one.
+Builds the specified [targets](http://msdn.microsoft.com/en-us/library/vstudio/ms171462.aspx) in the project. Separate them by semicolon. If not set it will use the default one.
 
 #### 5. Configuration
 Configuration/s to build. This overrides the default one/s specified in the solution/project file.
@@ -58,13 +58,13 @@ These settings configures whether or not assembly attributes will be stamped dur
 ![](images/psbuild-03.png)
 
 #### 1. Assembly Version
-This sets a "global version" that all the attributes will receive (if not overridden). This also supports [semantic versioning](http://semver.org/) and will "lift out" the build metadata part (e.g. +99) from attributes that doesn't support it.
+This sets a "global version" that all the attributes will receive (if not overridden). This also supports [semantic versioning](http://semver.org/) and will "lift out" the build metadata part (e.g. +99) from attributes that don't support it.
 
 #### 2. Assembly Attributes
 Configure which assembly attributes (you can use any attribute you want as long as they are assembly scoped) that will be stamped during build. Separate them by semicolon. If you leave it blank it will use **AssemblyVersion, AssemblyFileVersion** and if you use a SemVer the **AssemblyInformationalVersion** will also be stamped.
 
 #### 3. Assembly Information File(s) Location
-By default PSBuild will look for files names *AssemblyInfo.cs* in your working directory and recursive downwards. This property lets you specify another way to find the file/s you wish to stamp.
+By default PSBuild will look for files named *AssemblyInfo.cs* in your working directory and recursive downwards. This property lets you specify another way to find the file/s you wish to stamp.
 
 ----------
 

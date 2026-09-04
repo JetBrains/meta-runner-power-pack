@@ -44,7 +44,7 @@ You can install a meta-runner directly via the file system or, since TeamCity 9.
 
 - to install Meta-runner directly to the file system, take the Meta-runner definition file and put it into the [\<TeamCity Data Directory\>](http://confluence.jetbrains.com/display/TCDL/TeamCity+Data+Directory)/config/projects/\<Project ID\>/pluginData/metaRunners/ directory, where **\<Project ID\>** is the identifier of a project where you want to place the Meta-runner. If the **metaRunners** directory does not exist, it will be created. Once you place the file on the disk, TeamCity will detect it and load this Meta-runner; no server restart is required.
 
-- to install Meta-runner via the Web UI, go to the Project Settings page, select Meta-Runners from the list of settings on the left, click Upload Meta-Runner and select the Meta-runner definition file. Save you changes.
+- to install Meta-runner via the Web UI, go to the Project Settings page, select Meta-Runners from the list of settings on the left, click Upload Meta-Runner and select the Meta-runner definition file. Save your changes.
 
 If the Meta-runner is loaded successfully, you will see it listed on the Meta-Runners page for the project; if you have appropriate permissions, you can modify the definition directly in the TeamCity UI. 
 
